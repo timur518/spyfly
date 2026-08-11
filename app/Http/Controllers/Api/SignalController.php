@@ -19,7 +19,7 @@ class SignalController extends Controller
         $signals = Alert::query()
             ->with(['searchLog.originAirport', 'searchLog.destinationAirport'])
             ->whereNotNull('deviation_percent')
-            ->where('deviation_percent', '<=', -50)
+            ->where('deviation_percent', '<=', -40)
             ->whereHas('searchLog', static function ($query): void {
                 $query->where('search_type', 'one_way');
             })
