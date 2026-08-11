@@ -65,6 +65,13 @@ body.compact .ac{width:350px;max-width:350px}
   width:fit-content;max-width:100%;margin:0 auto;
   background:var(--card);border:1px solid var(--hair);border-bottom:0;
   border-radius:12px 12px 0 0;padding:8px 14px}
+.authtab-profile{display:flex;align-items:center;gap:8px}
+.authtab-avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  color:#fff;background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.34), transparent 34%),
+    linear-gradient(145deg, #315fcb 0%, #17397e 100%);
+  box-shadow:0 8px 16px -10px rgba(20,49,110,.65), inset 0 0 0 1px rgba(255,255,255,.16)}
+.authtab-avatar svg{display:block}
 .authtab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
 .authtab-user{font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
 .authchip{width:30px;height:30px;flex:none;border:0;border-radius:50%;cursor:pointer;
@@ -437,11 +444,13 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
   .stage .sub{display:block;max-height:none;margin:0 auto 36px;font-size:clamp(11px,3vw,12px);line-height:1.6}
   .authtab{padding:7px 10px 8px 12px;gap:6px}
   .authtab-label,.authtab-user{font-size:11px}
+  .authtab-avatar{width:22px;height:22px}
   .authchip{width:23px;height:23px}
 }
 @media(max-width:480px){
   .authtab{padding:6px 8px 7px 9px;gap:4px}
   .authtab-label,.authtab-user{font-size:9px;letter-spacing:0}
+  .authtab-avatar{width:20px;height:20px}
   .authchip{width:20px;height:20px}
   .authchip svg{transform:scale(.85)}
 }

@@ -119,7 +119,16 @@
     <div class="searchstack">
       <div class="authtab" role="group" aria-label="Вход через социальные сети">
         @auth
-          <span class="authtab-user">{{ auth()->user()->name }}</span>
+          <span class="authtab-profile">
+            <span class="authtab-avatar" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M4.8 21c1.3-3.7 4.3-5.7 7.2-5.7S17.9 17.3 19.2 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M16.8 5.5c1.4.7 2.4 2 2.8 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>
+              </svg>
+            </span>
+            <span class="authtab-user">{{ auth()->user()->name }}</span>
+          </span>
         @else
           <span class="authtab-label">Войдите, чтобы найти большие скидки:</span>
           <a href="{{ route('social.redirect', 'yandex') }}" class="authchip authchip-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
