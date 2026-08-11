@@ -120,13 +120,13 @@
       <div class="authtab" role="group" aria-label="Вход через социальные сети">
         <span class="authtab-label">Войдите, чтобы найти большие скидки:</span>
         <button type="button" class="authchip authchip-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10.4" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#fff">Я</text></svg>
+          <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10.4" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#fff">Я</text></svg>
         </button>
         <button type="button" class="authchip authchip-vk" title="Войти через VK" aria-label="Войти через VK">
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="#fff">VK</text></svg>
+          <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="#fff">VK</text></svg>
         </button>
         <button type="button" class="authchip authchip-ok" title="Войти через OK" aria-label="Войти через OK">
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="800" fill="#fff">OK</text></svg>
+          <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="800" fill="#fff">OK</text></svg>
         </button>
       </div>
       <section class="panel searchpanel">
