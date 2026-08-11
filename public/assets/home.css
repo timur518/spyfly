@@ -66,11 +66,13 @@ body.compact .ac{width:350px;max-width:350px}
   background:var(--card);border:1px solid var(--hair);border-bottom:0;
   border-radius:12px 12px 0 0;padding:8px 14px}
 .authtab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.authtab-user{font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
 .authchip{width:30px;height:30px;flex:none;border:0;border-radius:50%;cursor:pointer;
   display:grid;place-items:center;box-shadow:0 0 0 1px rgba(12,27,49,.08) inset;
   transition:transform .15s cubic-bezier(.2,.7,.2,1),box-shadow .15s,filter .15s}
 .authchip:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 6px 12px -4px rgba(3,14,38,.35)}
 .authchip:active{transform:translateY(0)}
+.authchip svg{display:block}
 .authchip-ya{background:#FC3F1D}
 .authchip-vk{background:#0077FF}
 .authchip-ok{background:#F58220}
@@ -434,13 +436,13 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
   .stage h1{font-size:clamp(30px,7.5vw,32px);line-height:1.08;margin:0 0 14px}
   .stage .sub{display:block;max-height:none;margin:0 auto 36px;font-size:clamp(11px,3vw,12px);line-height:1.6}
   .authtab{padding:7px 10px 8px 12px;gap:6px}
-  .authtab-label{font-size:11px}
-  .authchip{width:30px;height:30px}
+  .authtab-label,.authtab-user{font-size:11px}
+  .authchip{width:23px;height:23px}
 }
 @media(max-width:480px){
   .authtab{padding:6px 8px 7px 9px;gap:4px}
-  .authtab-label{font-size:12px;letter-spacing:0}
-  .authchip{width:30px;height:30px}
+  .authtab-label,.authtab-user{font-size:9px;letter-spacing:0}
+  .authchip{width:20px;height:20px}
   .authchip svg{transform:scale(.85)}
 }
 @media(max-width:640px){

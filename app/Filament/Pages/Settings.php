@@ -108,6 +108,38 @@ class Settings extends Page implements HasForms
                                     ])
                                     ->columns(2),
                             ]),
+                        Tab::make('Авторизация')
+                            ->schema([
+                                Section::make('OAuth-провайдеры')
+                                    ->description('Укажи client ID и client secret из кабинетов сервисов. Callback URL: /auth/yandex/callback, /auth/vk/callback, /auth/ok/callback.')
+                                    ->schema([
+                                        TextInput::make('yandex_client_id')
+                                            ->label('Yandex client ID')
+                                            ->required(),
+                                        TextInput::make('yandex_client_secret')
+                                            ->label('Yandex client secret')
+                                            ->password()
+                                            ->revealable()
+                                            ->required(),
+                                        TextInput::make('vkontakte_client_id')
+                                            ->label('VK client ID')
+                                            ->required(),
+                                        TextInput::make('vkontakte_client_secret')
+                                            ->label('VK client secret')
+                                            ->password()
+                                            ->revealable()
+                                            ->required(),
+                                        TextInput::make('odnoklassniki_client_id')
+                                            ->label('OK client ID')
+                                            ->required(),
+                                        TextInput::make('odnoklassniki_client_secret')
+                                            ->label('OK client secret')
+                                            ->password()
+                                            ->revealable()
+                                            ->required(),
+                                    ])
+                                    ->columns(2),
+                            ]),
                     ])
                     ->columnSpanFull()
                     ->persistTabInQueryString(),
@@ -130,12 +162,18 @@ class Settings extends Page implements HasForms
             'travelpayouts_partner_id',
             'travelpayouts_tp_trs',
             'travelpayouts_tp_p',
+            'yandex_client_id',
+            'yandex_client_secret',
+            'vkontakte_client_id',
+            'vkontakte_client_secret',
+            'odnoklassniki_client_id',
+            'odnoklassniki_client_secret',
         ]));
 
         Notification::make()
             ->success()
             ->title('Настройки сохранены')
-            ->body('Параметры выгодности и интеграций обновлены.')
+            ->body('Параметры выгодности, интеграций и авторизации обновлены.')
             ->send();
     }
 }

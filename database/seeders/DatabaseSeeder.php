@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Test User', 'password' => 'password']
         );
 
+        $this->call(RoleSeeder::class);
         $this->call(AirportSeeder::class);
         $this->call(ProfitabilitySettingSeeder::class);
     }

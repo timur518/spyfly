@@ -11,7 +11,11 @@
         "bezhansalleh/filament-shield": "^4.3",
         "filament/filament": "^4.0",
         "laravel/framework": "^13.8",
-        "laravel/tinker": "^3.0"
+        "laravel/socialite": "^5.29",
+        "laravel/tinker": "^3.0",
+        "socialiteproviders/odnoklassniki": "^4.1",
+        "socialiteproviders/vkontakte": "^5.1",
+        "socialiteproviders/yandex": "^4.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
