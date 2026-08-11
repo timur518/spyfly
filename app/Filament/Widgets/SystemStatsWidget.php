@@ -7,17 +7,16 @@ namespace App\Filament\Widgets;
 use App\Models\Alert;
 use App\Models\SearchLog;
 use App\Models\User;
-use Filament\Widgets\Widget;
+use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class SystemStatsWidget extends Widget
+class SystemStatsWidget extends StatsOverviewWidget
 {
-    protected static ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '60s';
 
     protected int|string|array $columnSpan = 'full';
 
-    protected string $view = 'filament.widgets.system-stats-widget';
-
-    protected function getViewData(): array
+    protected function getStats(): array
     {
         $averageDiscount = Alert::query()
             ->whereNotNull('deviation_percent')
@@ -27,40 +26,22 @@ class SystemStatsWidget extends Widget
         $discountValue = $averageDiscount !== null ? abs((float) $averageDiscount) : null;
 
         return [
-            'stats' => [
-                [
-                    'label' => 'Пользователи',
-                    'value' => $this->formatCount(User::query()->count()),
-                    'hint' => 'Аккаунты в системе',
-                    'unit' => 'всего',
-                    'glyph' => '◌',
-                    'accent' => 'linear-gradient(90deg, rgba(245, 158, 11, 0.95), rgba(251, 191, 36, 0.35))',
-                ],
-                [
-                    'label' => 'Выполнено поисков',
-                    'value' => $this->formatCount(SearchLog::query()->where('status', 'completed')->count()),
-                    'hint' => 'Поисковые запросы с завершённым расчётом',
-                    'unit' => 'запросов',
-                    'glyph' => '↗',
-                    'accent' => 'linear-gradient(90deg, rgba(96, 165, 250, 0.95), rgba(56, 189, 248, 0.35))',
-                ],
-                [
-                    'label' => 'Выгодные сигналы',
-                    'value' => $this->formatCount(Alert::query()->count()),
-                    'hint' => 'Записи, попавшие в ленту сигналов',
-                    'unit' => 'сигналов',
-                    'glyph' => '✈',
-                    'accent' => 'linear-gradient(90deg, rgba(16, 185, 129, 0.95), rgba(52, 211, 153, 0.35))',
-                ],
-                [
-                    'label' => 'Средняя скидка',
-                    'value' => $this->formatPercent($discountValue),
-                    'hint' => 'По сигналам с рассчитанной скидкой',
-                    'unit' => 'среднее',
-                    'glyph' => '≈',
-                    'accent' => 'linear-gradient(90deg, rgba(248, 113, 113, 0.95), rgba(244, 114, 182, 0.35))',
-                ],
-            ],
+            Stat::make('Пользователи', $this->formatCount(User::query()->count()))
+                ->description('Аккаунты в системе')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color('warning'),
+            Stat::make('Выполнено поисков', $this->formatCount(SearchLog::query()->where('status', 'completed')->count()))
+                ->description('Поисковые запросы с завершённым расчётом')
+                ->descriptionIcon('heroicon-m-magnifying-glass')
+                ->color('info'),
+            Stat::make('Выгодные сигналы', $this->formatCount(Alert::query()->count()))
+                ->description('Записи, попавшие в ленту сигналов')
+                ->descriptionIcon('heroicon-m-paper-airplane')
+                ->color('success'),
+            Stat::make('Средняя скидка', $this->formatPercent($discountValue))
+                ->description('По сигналам с рассчитанной скидкой')
+                ->descriptionIcon('heroicon-m-percent-badge')
+                ->color('danger'),
         ];
     }
 
