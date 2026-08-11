@@ -31,15 +31,15 @@ class SystemStatsWidget extends StatsOverviewWidget
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('warning'),
             Stat::make('Выполнено поисков', $this->formatCount(SearchLog::query()->where('status', 'completed')->count()))
-                ->description('Поисковые запросы с завершённым расчётом')
+                ->description('Поисковые запросы')
                 ->descriptionIcon('heroicon-m-magnifying-glass')
                 ->color('info'),
             Stat::make('Выгодные сигналы', $this->formatCount(Alert::query()->count()))
-                ->description('Записи, попавшие в ленту сигналов')
+                ->description('')
                 ->descriptionIcon('heroicon-m-paper-airplane')
                 ->color('success'),
             Stat::make('Средняя скидка', $this->formatPercent($discountValue))
-                ->description('По сигналам с рассчитанной скидкой')
+                ->description('от средней цены')
                 ->descriptionIcon('heroicon-m-percent-badge')
                 ->color('danger'),
         ];
