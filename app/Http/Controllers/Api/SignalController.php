@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Alert;
 use App\Models\Airport;
+use App\Models\ProfitabilitySetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,11 +16,17 @@ class SignalController extends Controller
     public function index(Request $request): JsonResponse
     {
         $limit = max(1, min(20, (int) $request->integer('limit', 8)));
+        $signalThreshold = ProfitabilitySetting::current()->signalThresholdPercent();
+        $lowPriceLimit = ProfitabilitySetting::LOW_PRICE_SIGNAL_LIMIT;
 
         $signals = Alert::query()
             ->with(['searchLog.originAirport', 'searchLog.destinationAirport'])
-            ->whereNotNull('deviation_percent')
-            ->where('deviation_percent', '<=', -40)
+            ->where(function ($query) use ($signalThreshold, $lowPriceLimit): void {
+                $query->where(function ($query) use ($signalThreshold): void {
+                    $query->whereNotNull('deviation_percent')
+                        ->where('deviation_percent', '<=', -$signalThreshold);
+                })->orWhere('price', '<', $lowPriceLimit);
+            })
             ->whereHas('searchLog', static function ($query): void {
                 $query->where('search_type', 'one_way');
             })

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProfitabilitySetting extends Model
 {
+    public const LOW_PRICE_SIGNAL_LIMIT = 3000;
+
     protected $fillable = [
         'signal_threshold_percent',
         'rules',
@@ -25,5 +27,10 @@ class ProfitabilitySetting extends Model
             'signal_threshold_percent' => 40,
             'rules' => [],
         ]);
+    }
+
+    public function signalThresholdPercent(): float
+    {
+        return (float) ($this->signal_threshold_percent ?? 40);
     }
 }

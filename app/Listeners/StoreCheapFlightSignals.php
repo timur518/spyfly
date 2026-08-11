@@ -25,11 +25,13 @@ class StoreCheapFlightSignals
         }
 
         $baseline = $analysis['baseline_avg'] ?? $analysis['baseline_median'] ?? null;
-        if (! is_numeric($baseline) || (float) $baseline <= 0) {
+        $hasBaseline = is_numeric($baseline) && (float) $baseline > 0;
+        if (! $hasBaseline && $bestFlights === []) {
             return;
         }
 
-        $signalThreshold = (float) (ProfitabilitySetting::current()->signal_threshold_percent ?? 40);
+        $signalThreshold = ProfitabilitySetting::current()->signalThresholdPercent();
+        $lowPriceLimit = ProfitabilitySetting::LOW_PRICE_SIGNAL_LIMIT;
 
         foreach ($bestFlights as $flight) {
             if (! is_array($flight) || ! isset($flight['price'], $flight['date'])) {
@@ -37,10 +39,13 @@ class StoreCheapFlightSignals
             }
 
             $price = (float) $flight['price'];
-            $savingPercent = (((float) $baseline - $price) / (float) $baseline) * 100;
-            $deviation = -$savingPercent;
+            $savingPercent = $hasBaseline
+                ? (((float) $baseline - $price) / (float) $baseline) * 100
+                : null;
+            $meetsPercentRule = $hasBaseline && $savingPercent >= $signalThreshold;
+            $meetsLowPriceRule = $price < $lowPriceLimit;
 
-            if ($savingPercent < $signalThreshold) {
+            if (! $meetsPercentRule && ! $meetsLowPriceRule) {
                 continue;
             }
 
@@ -61,8 +66,8 @@ class StoreCheapFlightSignals
                 'departure_date' => $flight['date'],
                 'return_date' => isset($flight['return_at']) ? substr((string) $flight['return_at'], 0, 10) : null,
                 'price' => $price,
-                'baseline_price' => (float) $baseline,
-                'deviation_percent' => $deviation,
+                'baseline_price' => $hasBaseline ? (float) $baseline : null,
+                'deviation_percent' => $savingPercent !== null ? -$savingPercent : null,
                 'score' => $analysis['score'] !== null ? (int) round((float) $analysis['score']) : null,
             ]);
         }
