@@ -10,7 +10,7 @@ class AirportSeeder extends Seeder
 {
     public function run(): void
     {
-        $jsonPath = dirname(base_path()) . '/public/data/airports.json';
+        $jsonPath = '/public/data/airports.json';
 
         if (! is_file($jsonPath)) {
             throw new RuntimeException("Airports source file not found: {$jsonPath}");
