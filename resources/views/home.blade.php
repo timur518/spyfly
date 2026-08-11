@@ -114,7 +114,7 @@
       </div>
       <div class="stagecopy">
         <h1>Когда лететь <span class="hl">дешевле</span></h1>
-        <p class="sub">Находим, когда билеты стоят сильно ниже обычного</p>
+        <p class="sub">Находим дни, когда билеты стоят сильно ниже обычного</p>
       </div>
     </div>
     <section class="panel searchpanel">
