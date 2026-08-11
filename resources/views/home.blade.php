@@ -117,6 +117,23 @@
         <p class="sub">Находим дни, когда билеты стоят сильно ниже обычного</p>
       </div>
     </div>
+    <div class="authtab" role="group" aria-label="Вход через социальные сети">
+      <span class="authtab-tx">Войдите, чтобы найти лучшее:</span>
+      <div class="authtab-btns">
+        <button type="button" class="authbtn authbtn-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#FC3F1D"/><text x="8" y="11.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#fff">Я</text></svg>
+          <span>Яндекс</span>
+        </button>
+        <button type="button" class="authbtn authbtn-vk" title="Войти через VK" aria-label="Войти через VK">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="4" fill="#0077FF"/><text x="8" y="11.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#fff">VK</text></svg>
+          <span>VK</span>
+        </button>
+        <button type="button" class="authbtn authbtn-ok" title="Войти через OK" aria-label="Войти через OK">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#F58220"/><text x="8" y="11.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#fff">OK</text></svg>
+          <span>OK</span>
+        </button>
+      </div>
+    </div>
     <section class="panel searchpanel">
       <form id="form" class="search">
         <div class="fgroup grp-route">
