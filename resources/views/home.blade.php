@@ -113,8 +113,8 @@
         <div class="brand">SpyFly</div>
       </div>
       <div class="stagecopy">
-        <h1>Дешевые авиабилеты — когда лететь <span class="hl">дешевле</span></h1>
-        <p class="sub">SpyFly ищет дешевые авиабилеты по датам и показывает, когда билет стоит сильно ниже обычного</p>
+        <h1>Когда лететь <span class="hl">дешевле</span></h1>
+        <p class="sub">Находим, когда билеты стоят сильно ниже обычного</p>
       </div>
     </div>
     <section class="panel searchpanel">
