@@ -86,7 +86,6 @@
     ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
 </script>
-
 <meta name="google-site-verification" content="ski-VqjEviW7u_ltGW_uoUTkE2r8lJxSMRtjHLZV9g0" />
 <meta name="yandex-verification" content="2a6bdbb82888251d" />
 <!-- Yandex.Metrika counter -->
