@@ -428,9 +428,14 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
   .stagecopy{display:flex;flex-direction:column;align-items:center;gap:0}
   .stage h1{font-size:clamp(30px,7.5vw,32px);line-height:1.08;margin:0 0 14px}
   .stage .sub{display:block;max-height:none;margin:0 auto 36px;font-size:clamp(11px,3vw,12px);line-height:1.6}
-  .authtab{right:12px;padding:7px 10px 8px 12px;gap:8px}
-  .authtab-label{display:none}
-  .authchip{width:28px;height:28px}
+  .authtab{padding:7px 10px 8px 12px;gap:6px}
+  .authtab-label{font-size:11px}
+  .authchip{width:23px;height:23px}
+}
+@media(max-width:480px){
+  .authtab{flex-wrap:wrap;justify-content:flex-end;row-gap:6px;padding:8px 10px}
+  .authtab-label{white-space:normal;flex-basis:100%;text-align:right;font-size:11px;line-height:1.35}
+  .authchip{width:24px;height:24px}
 }
 @media(max-width:640px){
   body.compact .search{grid-template-columns:1fr}
