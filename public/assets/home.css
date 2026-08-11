@@ -31,10 +31,10 @@ body.compact .stage::after{opacity:0}
   transition:max-width .8s cubic-bezier(.22,.85,.26,1)}
 body.compact .stagewrap{max-width:1080px}
 .stagehead{display:flex;flex-direction:column;align-items:center;width:100%}
-.stagehead>*,.searchpanel{animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards}
+.stagehead>*,.searchstack{animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards}
 .stagehead>:nth-child(2){animation-delay:.08s}
 .stagehead>:nth-child(3){animation-delay:.16s}
-.searchpanel{animation-delay:.22s}
+.searchstack{animation-delay:.22s}
 .stagecopy{display:flex;flex-direction:column;align-items:center}
 body.compact .stagehead{flex-direction:row;justify-content:space-between;align-items:center;gap:14px;
   margin-bottom:12px;animation:refit .5s ease backwards}
@@ -52,28 +52,30 @@ body.compact .stage h1{font-size:18px;margin:0;letter-spacing:-.01em}
 body.compact .stage .sub{display:none}
 .stage :focus-visible{outline-color:#fff}
 .panel{background:var(--card);border:1px solid var(--hair);border-radius:14px;box-shadow:var(--shadow)}
-.searchpanel{position:relative;z-index:80;padding:14px;width:100%;max-width:560px;text-align:left;box-shadow:0 30px 70px -34px rgba(3,14,38,.6);
-  transition:max-width .8s cubic-bezier(.22,.85,.26,1),padding .8s cubic-bezier(.22,.85,.26,1),box-shadow .8s}
-body.compact .searchpanel{max-width:1080px;padding:10px;box-shadow:var(--shadow)}
+.searchstack{width:100%;max-width:560px;transition:max-width .8s cubic-bezier(.22,.85,.26,1);
+  animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:.22s}
+body.compact .searchstack{max-width:1080px}
+.searchpanel{position:relative;z-index:80;padding:14px;width:100%;text-align:left;box-shadow:0 30px 70px -34px rgba(3,14,38,.6);
+  border-radius:14px 0 14px 14px;
+  transition:padding .8s cubic-bezier(.22,.85,.26,1),box-shadow .8s,border-radius .8s}
+body.compact .searchpanel{padding:10px;box-shadow:var(--shadow)}
 body.compact .ac{width:350px;max-width:350px}
 
-.authtab{position:absolute;z-index:79;top:0;right:22px;transform:translateY(-100%);
-  display:flex;align-items:center;gap:10px;
-  background:var(--ink);color:#fff;
-  padding:8px 12px 9px 14px;border-radius:12px 12px 0 0;
-  box-shadow:0 -14px 26px -18px rgba(3,14,38,.55);
-  animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:.3s}
-.authtab-label{font-size:11px;font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,.62);white-space:nowrap}
-.authtab-row{display:flex;align-items:center;gap:5px}
-.authchip{width:26px;height:26px;flex:none;border:0;border-radius:50%;cursor:pointer;
-  display:grid;place-items:center;box-shadow:0 0 0 1px rgba(255,255,255,.14) inset;
+.authtab{display:flex;align-items:center;justify-content:flex-end;gap:9px;
+  width:fit-content;max-width:100%;margin-left:auto;
+  background:var(--card);border:1px solid var(--hair);border-bottom:0;
+  border-radius:12px 12px 0 0;padding:8px 14px}
+.authtab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.authchip{width:25px;height:25px;flex:none;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;box-shadow:0 0 0 1px rgba(12,27,49,.08) inset;
   transition:transform .15s cubic-bezier(.2,.7,.2,1),box-shadow .15s,filter .15s}
-.authchip:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 6px 14px -4px rgba(0,0,0,.5)}
+.authchip:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 6px 12px -4px rgba(3,14,38,.35)}
 .authchip:active{transform:translateY(0)}
 .authchip-ya{background:#FC3F1D}
 .authchip-vk{background:#0077FF}
 .authchip-ok{background:#F58220}
 body.compact .authtab{display:none}
+body.compact .searchpanel{border-radius:14px}
 body.compact .fld.fld-to .ac{left:auto;right:0}
 
 .signals{position:relative;margin:10px auto 0;padding:0;background:transparent;border:0;box-shadow:none;overflow:hidden;
@@ -268,7 +270,7 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 @media(prefers-reduced-motion:reduce){
   /* Убираем только движение (сдвиг/масштаб), но оставляем мягкое проявление
      и, главное, вращение спиннера — это функциональный индикатор загрузки. */
-  .result>*,.loader,.stagehead>*,.searchpanel{animation-name:fade}
+  .result>*,.loader,.stagehead>*,.searchstack{animation-name:fade}
   body.compact .search{animation-name:fade}
   .stage,.stage::after,.stage h1,.stage .sub,.swap svg{transition:none}
   .ticket-live i{animation:none}
