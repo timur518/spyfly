@@ -56,13 +56,13 @@ body.compact .stage .sub{display:none}
   animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:.22s}
 body.compact .searchstack{max-width:1080px}
 .searchpanel{position:relative;z-index:80;padding:14px;width:100%;text-align:left;box-shadow:0 30px 70px -34px rgba(3,14,38,.6);
-  border-radius:14px 0 14px 14px;
-  transition:padding .8s cubic-bezier(.22,.85,.26,1),box-shadow .8s,border-radius .8s}
+  border-radius:14px;
+  transition:padding .8s cubic-bezier(.22,.85,.26,1),box-shadow .8s}
 body.compact .searchpanel{padding:10px;box-shadow:var(--shadow)}
 body.compact .ac{width:350px;max-width:350px}
 
-.authtab{display:flex;align-items:center;justify-content:flex-end;gap:9px;
-  width:fit-content;max-width:100%;margin-left:auto;
+.authtab{display:flex;align-items:center;justify-content:center;gap:9px;
+  width:fit-content;max-width:100%;margin:0 auto;
   background:var(--card);border:1px solid var(--hair);border-bottom:0;
   border-radius:12px 12px 0 0;padding:8px 14px}
 .authtab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
@@ -433,9 +433,10 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
   .authchip{width:23px;height:23px}
 }
 @media(max-width:480px){
-  .authtab{flex-wrap:wrap;justify-content:flex-end;row-gap:6px;padding:8px 10px}
-  .authtab-label{white-space:normal;flex-basis:100%;text-align:right;font-size:11px;line-height:1.35}
-  .authchip{width:24px;height:24px}
+  .authtab{padding:6px 8px 7px 9px;gap:4px}
+  .authtab-label{font-size:9px;letter-spacing:0}
+  .authchip{width:20px;height:20px}
+  .authchip svg{transform:scale(.85)}
 }
 @media(max-width:640px){
   body.compact .search{grid-template-columns:1fr}
