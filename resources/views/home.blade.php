@@ -3,11 +3,105 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SpyFly — когда лететь дешевле</title>
+
+@php
+    $seoTitle = 'Дешевые авиабилеты — находим авиабилеты с большой выгодой | SpyFly';
+    $seoDescription = 'Дешевые авиабилеты по всем направлениям: Сравнение цен и подписка на сигналы о дешевых авиабилетах. Скидки на авиабилеты, поиск дешевых билетов на самолет, отслеживание цен на авиабилеты. SpyFly — ваш надежный помощник в поиске выгодных авиаперелетов.';
+    $canonicalUrl = url('/');
+    $ogImageUrl = asset('assets/og-cover.png');
+@endphp
+
+<title>{{ $seoTitle }}</title>
+<meta name="description" content="{{ $seoDescription }}">
+<meta name="keywords" content="дешевые авиабилеты, скидки на авиабилеты, авиабилеты онлайн, купить дешевые авиабилеты, отслеживание цен на авиабилеты, поиск дешевых билетов на самолет">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="author" content="SpyFly">
+<link rel="canonical" href="{{ $canonicalUrl }}">
+<meta name="theme-color" content="#0b0e14">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="SpyFly">
+<meta property="og:title" content="{{ $seoTitle }}">
+<meta property="og:description" content="{{ $seoDescription }}">
+<meta property="og:url" content="{{ $canonicalUrl }}">
+<meta property="og:image" content="{{ $ogImageUrl }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $seoTitle }}">
+<meta name="twitter:description" content="{{ $seoDescription }}">
+<meta name="twitter:image" content="{{ $ogImageUrl }}">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('assets/home.css') }}">
+
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'WebSite',
+            '@id' => $canonicalUrl . '#website',
+            'url' => $canonicalUrl,
+            'name' => 'SpyFly',
+            'description' => $seoDescription,
+            'inLanguage' => 'ru-RU',
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => [
+                    '@type' => 'EntryPoint',
+                    'urlTemplate' => $canonicalUrl . '?origin={origin}&destination={destination}',
+                ],
+                'query-input' => [
+                    'required name=origin',
+                    'required name=destination',
+                ],
+            ],
+        ],
+        [
+            '@type' => 'Organization',
+            '@id' => $canonicalUrl . '#organization',
+            'name' => 'SpyFly',
+            'url' => $canonicalUrl,
+            'logo' => asset('assets/logo-512.png'),
+        ],
+        [
+            '@type' => 'WebPage',
+            '@id' => $canonicalUrl . '#webpage',
+            'url' => $canonicalUrl,
+            'name' => $seoTitle,
+            'description' => $seoDescription,
+            'inLanguage' => 'ru-RU',
+            'isPartOf' => ['@id' => $canonicalUrl . '#website'],
+            'about' => ['@id' => $canonicalUrl . '#organization'],
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+
+<meta name="google-site-verification" content="ski-VqjEviW7u_ltGW_uoUTkE2r8lJxSMRtjHLZV9g0" />
+<meta name="yandex-verification" content="2a6bdbb82888251d" />
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111493334', 'ym');
+
+    ym(111493334, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/111493334" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 </head>
 <body>
 
@@ -19,8 +113,8 @@
         <div class="brand">SpyFly</div>
       </div>
       <div class="stagecopy">
-        <h1>Когда лететь <span class="hl">дешевле</span></h1>
-        <p class="sub">Находим даты, когда билет стоит сильно ниже обычного</p>
+        <h1>Дешевые авиабилеты — когда лететь <span class="hl">дешевле</span></h1>
+        <p class="sub">SpyFly ищет дешевые авиабилеты по датам и показывает, когда билет стоит сильно ниже обычного</p>
       </div>
     </div>
     <section class="panel searchpanel">
