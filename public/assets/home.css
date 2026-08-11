@@ -67,10 +67,9 @@ body.compact .ac{width:350px;max-width:350px}
   border-radius:12px 12px 0 0;padding:8px 14px}
 .authtab-profile{display:flex;align-items:center;gap:8px}
 .authtab-avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
-  color:#fff;background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.34), transparent 34%),
-    linear-gradient(145deg, #315fcb 0%, #17397e 100%);
-  box-shadow:0 8px 16px -10px rgba(20,49,110,.65), inset 0 0 0 1px rgba(255,255,255,.16)}
+  color:var(--cobalt);background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.6) 30%, rgba(240,246,255,.95) 100%);
+  box-shadow:0 8px 16px -10px rgba(20,49,110,.35), inset 0 0 0 1px rgba(22,67,156,.15)}
 .authtab-avatar svg{display:block}
 .authtab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
 .authtab-user{font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
