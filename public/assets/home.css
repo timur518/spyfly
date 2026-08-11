@@ -57,18 +57,22 @@ body.compact .stage .sub{display:none}
 body.compact .searchpanel{max-width:1080px;padding:10px;box-shadow:var(--shadow)}
 body.compact .ac{width:350px;max-width:350px}
 
-.authtab{position:relative;z-index:81;display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;
-  width:100%;max-width:560px;margin:0 0 -1px;padding:10px 18px;background:var(--card);
-  border:1px solid var(--hair);border-bottom:none;border-radius:14px 14px 0 0;
-  box-shadow:0 -6px 18px -14px rgba(3,14,38,.35)}
-.authtab-tx{font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap}
-.authtab-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.authbtn{display:flex;align-items:center;gap:6px;border:1px solid var(--hair2);border-radius:999px;background:#fff;
-  padding:5px 12px 5px 6px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;
-  transition:background .15s,border-color .15s,transform .1s}
-.authbtn svg{flex:none;border-radius:50%}
-.authbtn:hover{background:var(--air);border-color:var(--hair)}
-.authbtn:active{transform:translateY(1px)}
+.authtab{position:absolute;z-index:79;top:0;right:22px;transform:translateY(-100%);
+  display:flex;align-items:center;gap:10px;
+  background:var(--ink);color:#fff;
+  padding:8px 12px 9px 14px;border-radius:12px 12px 0 0;
+  box-shadow:0 -14px 26px -18px rgba(3,14,38,.55);
+  animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:.3s}
+.authtab-label{font-size:11px;font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,.62);white-space:nowrap}
+.authtab-row{display:flex;align-items:center;gap:5px}
+.authchip{width:26px;height:26px;flex:none;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;box-shadow:0 0 0 1px rgba(255,255,255,.14) inset;
+  transition:transform .15s cubic-bezier(.2,.7,.2,1),box-shadow .15s,filter .15s}
+.authchip:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 6px 14px -4px rgba(0,0,0,.5)}
+.authchip:active{transform:translateY(0)}
+.authchip-ya{background:#FC3F1D}
+.authchip-vk{background:#0077FF}
+.authchip-ok{background:#F58220}
 body.compact .authtab{display:none}
 body.compact .fld.fld-to .ac{left:auto;right:0}
 
