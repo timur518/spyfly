@@ -485,7 +485,6 @@ function cabinetSubscriptionsPanel(){
           <h2>Активные подписки</h2>
           <p>${active.length ? 'Текущие активные подписки, по которым мы ищем подходящие рейсы' : 'Подписок пока нет — можно оформить первую прямо отсюда.'}</p>
         </div>
-        <div class="cabinet-tag active">${active.length} шт.</div>
       </div>
       ${active.length ? `<div class="cabinet-grid">${active.map(item=>subscriptionCardMarkup(item)).join('')}</div>` : `
         <div class="cabinet-empty">
