@@ -510,9 +510,15 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 .cabinet-flight-meta{font-size:11.5px;color:var(--muted)}
 .cabinet-flight-actions{display:grid;justify-items:end;gap:8px;flex:none}
 .cabinet-flight-price{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cobalt);white-space:nowrap}
-.cabinet-flight-link{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;
-  background:var(--cobalt);color:#fff;text-decoration:none;font-size:11.5px;font-weight:600;white-space:nowrap}
-.cabinet-flight-link:hover{background:var(--cobalt-ink)}
+.cabinet-flight-buy{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;
+  background:var(--signal);color:#fff;text-decoration:none;cursor:pointer;transition:background .15s ease,transform .15s ease,box-shadow .15s ease;
+  min-width:186px}
+.cabinet-flight-buy:hover{background:#0A7443;box-shadow:0 6px 16px -8px rgba(12,138,79,.55)}
+.cabinet-flight-buy:active{transform:scale(.98)}
+.cabinet-flight-buy>svg{flex:none;opacity:.9}
+.cabinet-flight-buy .tx{display:grid;justify-items:start;text-align:left}
+.cabinet-flight-buy .pr{font-size:17.5px}
+.cabinet-flight-buy .s{font-size:11px}
 .cabinet-empty-note{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
 .cabinet-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
 .cabinet-tag.muted{background:#EFF4FB;color:var(--muted)}

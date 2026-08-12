@@ -346,8 +346,15 @@ function subscriptionCardMarkup(item,{history=false}={}){
           <span class="cabinet-flight-meta">${esc(date)} · ${esc(airline)}</span>
         </div>
         <div class="cabinet-flight-actions">
-          <div class="cabinet-flight-price">${money(f.price)}</div>
-          ${buyUrl ? `<a class="cabinet-flight-link" href="${esc(buyUrl)}" target="_blank" rel="noopener">В Aviasales</a>` : ''}
+          ${buyUrl ? `
+            <a class="buy cabinet-flight-buy" href="${esc(buyUrl)}" target="_blank" rel="noopener" title="Открыть в поиске Aviasales">
+              ${CART_ICON}
+              <span class="tx">
+                <span class="pr">${money(f.price)}</span>
+                <span class="s">${f.trip_type === 'one_way' ? 'в одну сторону' : 'туда и обратно'}</span>
+              </span>
+            </a>
+          ` : `<div class="cabinet-flight-price">${money(f.price)}</div>`}
         </div>
       </div>`;
   }).join('');
