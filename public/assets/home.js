@@ -15,6 +15,7 @@ const subscriptionOrb=document.getElementById('subscriptionOrb');
 const subscriptionProcessText=document.getElementById('subscriptionProcessText');
 const subscriptionAgainBtn=document.getElementById('subscriptionAgainBtn');
 const subscriptionCard=document.getElementById('subscriptionCard');
+const subUserIdInput=subscriptionForm.querySelector('input[name="user_id"]');
 const subOriginInput=document.getElementById('subOrigin');
 const subDestinationInput=document.getElementById('subDestination');
 const subOriginAc=document.getElementById('subOriginAc');
@@ -877,7 +878,7 @@ subscriptionForm.addEventListener('submit',async e=>{
   subscriptionMessage.textContent='';
 
   const payload={
-    user_id:1,
+    user_id:subUserIdInput?.value?Number(subUserIdInput.value):null,
     origin_iata:normalizeAirportValue(subOriginInput.value),
     destination_iata:normalizeAirportValue(subDestinationInput.value)||null,
     date_from:subDateFrom.value||null,

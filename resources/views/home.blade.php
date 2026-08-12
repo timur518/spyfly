@@ -129,6 +129,16 @@
             </span>
             <span class="authtab-user">{{ auth()->user()->name }}</span>
           </span>
+          <form method="POST" action="{{ route('logout') }}" class="authtab-logout">
+            @csrf
+            <button type="submit" class="authchip authchip-logout" title="Выйти из аккаунта" aria-label="Выйти из аккаунта">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15 12H4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                <path d="M14 4h4.2A1.8 1.8 0 0 1 20 5.8v12.4A1.8 1.8 0 0 1 18.2 20H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+              </svg>
+            </button>
+          </form>
         @else
           <span class="authtab-label">Войдите, чтобы найти большие скидки:</span>
           <a href="{{ route('social.redirect', 'yandex') }}" class="authchip authchip-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
@@ -210,7 +220,7 @@
     <p class="ticket-lead" id="subscriptionLead">Запустите слежку за авиабилетами — сообщим, как только цена станет подходящей</p>
 
     <form id="subscriptionForm" class="subscribeform">
-      <input type="hidden" name="user_id" value="1">
+      <input type="hidden" name="user_id" value="{{ auth()->id() ?? '' }}">
       <input type="hidden" name="is_active" value="1">
 
       <div class="subscribe-topline">

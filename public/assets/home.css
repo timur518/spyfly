@@ -66,6 +66,7 @@ body.compact .ac{width:350px;max-width:350px}
   background:var(--card);border:1px solid var(--hair);border-bottom:0;
   border-radius:12px 12px 0 0;padding:8px 14px}
 .authtab-profile{display:flex;align-items:center;gap:8px}
+.authtab-logout{margin:0}
 .authtab-avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
   color:var(--cobalt);background:
     radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.6) 30%, rgba(240,246,255,.95) 100%);
@@ -82,6 +83,8 @@ body.compact .ac{width:350px;max-width:350px}
 .authchip-ya{background:#FC3F1D}
 .authchip-vk{background:#0077FF}
 .authchip-ok{background:#F58220}
+.authchip-logout{background:#fff;color:var(--cobalt);box-shadow:0 0 0 1px rgba(22,67,156,.18) inset}
+.authchip-logout:hover{filter:brightness(1);box-shadow:0 6px 12px -4px rgba(3,14,38,.18),0 0 0 1px rgba(22,67,156,.22) inset}
 body.compact .authtab{display:none}
 body.compact .searchpanel{border-radius:14px}
 body.compact .fld.fld-to .ac{left:auto;right:0}
