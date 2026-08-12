@@ -17,6 +17,9 @@ const subscriptionAgainBtn=document.getElementById('subscriptionAgainBtn');
 const subscriptionCard=document.getElementById('subscriptionCard');
 const cabinetShell=document.getElementById('cabinetShell');
 const cabinetToggle=document.getElementById('cabinetToggle');
+const deactivateModal=document.getElementById('deactivateModal');
+const deactivateConfirmBtn=document.getElementById('deactivateConfirmBtn');
+const deactivateCancelBtn=document.getElementById('deactivateCancelBtn');
 const cabinetState=window.__CABINET_STATE__||null;
 const cabinetRoutes=window.__HOME_ROUTES__||{};
 const csrfToken=document.querySelector('meta[name="csrf-token"]')?.content||'';
@@ -40,6 +43,8 @@ const initialView=(document.body.dataset.pageView||cabinetState?.view||'search')
 
 let currentView=initialView;
 let cabinetSection='subscriptions';
+let pendingDeactivateSubscriptionId=null;
+let previousBodyOverflow='';
 
 const money=v=>v==null?'—':new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(v)+' ₽';
 const moneyShort=v=>{
@@ -310,6 +315,50 @@ function cabinetAvatarMarkup(user){
     : cabinetAvatarSvg();
 }
 
+function closeDeactivateModal(){
+  pendingDeactivateSubscriptionId=null;
+  if(deactivateModal){
+    deactivateModal.hidden=true;
+  }
+  document.body.style.overflow=previousBodyOverflow;
+}
+
+function openDeactivateModal(subscriptionId){
+  pendingDeactivateSubscriptionId=subscriptionId;
+  if(deactivateModal){
+    previousBodyOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    deactivateModal.hidden=false;
+  }
+}
+
+async function deactivateSubscription(subscriptionId){
+  const response=await fetch(`/api/subscriptions/${subscriptionId}`,{
+    method:'PATCH',
+    headers:{Accept:'application/json','Content-Type':'application/json'},
+    body:JSON.stringify({
+      user_id:cabinetState?.user?.id || null,
+      is_active:false,
+    }),
+  });
+  const data=await response.json().catch(()=>null);
+  if(!response.ok || !data?.success){
+    throw new Error(extractApiError(data,'Не удалось завершить поиск'));
+  }
+
+  const subscription=cabinetState?.subscriptions?.find(item=>Number(item.id)===Number(subscriptionId));
+  if(subscription){
+    subscription.is_active=false;
+  }
+  cabinetState.active_subscriptions=(cabinetState.active_subscriptions||[]).filter(item=>Number(item.id)!==Number(subscriptionId));
+  cabinetState.active_count=cabinetState.active_subscriptions.length;
+  if(data.data?.updated_at && subscription){
+    subscription.updated_at=data.data.updated_at;
+  }
+  closeDeactivateModal();
+  renderCabinet(cabinetSection);
+}
+
 function subscriptionCardMarkup(item,{history=false}={}){
   const lines=splitSummary(item.route_summary);
   const title=`${airportCity(item.origin_iata)}${item.destination_iata ? ' - ' + airportCity(item.destination_iata) : ''}`;
@@ -367,6 +416,14 @@ function subscriptionCardMarkup(item,{history=false}={}){
       ${matches.length
         ? `<div class="cabinet-flight-list">${detailsRows}</div>`
         : `<p class="cabinet-empty-note">Мы ещё не нашли рейсы, которые попадают в условия этой подписки.</p>`}
+      <div class="cabinet-card-details-footer">
+        <button type="button" class="cabinet-stop-btn" data-subscription-deactivate="${item.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>Больше не искать</span>
+        </button>
+      </div>
     </div>` : '';
   return `
     <article class="cabinet-card" data-subscription-card="${item.id}">
@@ -561,6 +618,12 @@ if(cabinetToggle){
 
 if(cabinetShell){
   cabinetShell.addEventListener('click',e=>{
+    const stopBtn=e.target.closest('[data-subscription-deactivate]');
+    if(stopBtn){
+      openDeactivateModal(stopBtn.dataset.subscriptionDeactivate);
+      return;
+    }
+
     const detailsBtn=e.target.closest('[data-subscription-toggle]');
     if(detailsBtn){
       const targetId=detailsBtn.dataset.target;
@@ -583,6 +646,38 @@ if(cabinetShell){
     showCabinet(section);
   });
 }
+
+if(deactivateModal){
+  deactivateModal.addEventListener('click',e=>{
+    if(e.target.matches('[data-modal-close]')){
+      closeDeactivateModal();
+    }
+  });
+}
+
+if(deactivateCancelBtn){
+  deactivateCancelBtn.addEventListener('click',closeDeactivateModal);
+}
+
+if(deactivateConfirmBtn){
+  deactivateConfirmBtn.addEventListener('click',async()=>{
+    if(!pendingDeactivateSubscriptionId) return;
+    deactivateConfirmBtn.disabled=true;
+    try{
+      await deactivateSubscription(pendingDeactivateSubscriptionId);
+    }catch(err){
+      console.error(err);
+    }finally{
+      deactivateConfirmBtn.disabled=false;
+    }
+  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && deactivateModal && !deactivateModal.hidden){
+    closeDeactivateModal();
+  }
+});
 
 let airportsReady=null;
 async function loadAirports(){

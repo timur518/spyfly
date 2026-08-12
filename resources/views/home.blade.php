@@ -210,6 +210,19 @@
 
 <section id="cabinetShell" class="cabinet-shell" hidden aria-live="polite"></section>
 
+<div id="deactivateModal" class="deactivate-modal" hidden>
+  <div class="deactivate-modal__backdrop" data-modal-close></div>
+  <div class="deactivate-modal__panel" role="dialog" aria-modal="true" aria-labelledby="deactivateModalTitle">
+    <div class="deactivate-modal__icon" aria-hidden="true">×</div>
+    <h2 id="deactivateModalTitle">Вы действительно хотите завершить поиск билетов?</h2>
+    <p>Подписка перестанет обновляться, а найденные рейсы останутся в истории.</p>
+    <div class="deactivate-modal__actions">
+      <button type="button" class="deactivate-modal__confirm" id="deactivateConfirmBtn">Да</button>
+      <button type="button" class="deactivate-modal__cancel" id="deactivateCancelBtn">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <section class="ticket" id="subscriptionCard" aria-labelledby="subscriptionTitle" hidden>
   <div class="ticket-strip">
     <div class="ticket-strip-tx">

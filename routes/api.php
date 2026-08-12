@@ -14,3 +14,4 @@ Route::prefix('airports')->group(function (): void {
 Route::get('flights/search', [FlightSearchController::class, 'search']);
 Route::get('signals', [SignalController::class, 'index']);
 Route::post('subscriptions', [SubscriptionController::class, 'store']);
+Route::patch('subscriptions/{subscription}', [SubscriptionController::class, 'update']);

@@ -52,10 +52,11 @@ Route::get('/', function () {
         $cabinet = [
             'view' => $view,
             'user' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar_url' => $user->avatar_url,
-                'provider' => $user->provider,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar_url' => $user->avatar_url,
+            'provider' => $user->provider,
             ],
             'active_count' => $subscriptions->where('is_active', true)->count(),
             'buy_prefix' => $buyPrefix,

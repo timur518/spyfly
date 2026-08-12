@@ -57,6 +57,28 @@ class SubscriptionController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, Description $subscription): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['sometimes', 'integer', 'exists:users,id'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $actorId = (int) ($request->user()?->id ?? $validated['user_id'] ?? 0);
+        if ($actorId <= 0 || $actorId !== (int) $subscription->user_id) {
+            abort(403);
+        }
+
+        $subscription->forceFill([
+            'is_active' => (bool) $validated['is_active'],
+        ])->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->toPayload($subscription->refresh()),
+        ]);
+    }
+
     private function toPayload(Description $description): array
     {
         return [
@@ -72,6 +94,7 @@ class SubscriptionController extends Controller
             'max_stay_days' => $description->max_stay_days,
             'channel' => $description->channel,
             'is_active' => $description->is_active,
+            'matched_flights' => $description->matched_flights ?? [],
             'created_at' => $description->created_at?->toISOString(),
         ];
     }
