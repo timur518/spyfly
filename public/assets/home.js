@@ -327,7 +327,7 @@ function subscriptionCardMarkup(item,{history=false}={}){
   const updatedText=minutesAgo(item.updated_at||item.created_at);
   const detailsId=`subscription-details-${item.id}`;
   const detailsRows=matches.slice(0,4).map(f=>{
-    const route=[f.origin_iata,f.destination_iata].filter(Boolean).join(' → ') || 'Маршрут';
+    const route=`${airportCity(f.origin_iata)} → ${airportCity(f.destination_iata)}`;
     const date=f.return_at ? `${dShort(f.date)} / ${dShort(String(f.return_at).slice(0,10))}` : dShort(f.date);
     const airline=f.airline ? `${esc(airlineName(f.airline))}${f.flight_number ? ` · ${esc(String(f.flight_number))}` : ''}` : 'Рейс';
     const buyUrl=buyLink(
