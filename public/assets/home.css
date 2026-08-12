@@ -428,7 +428,8 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 
 /* ---------- Cabinet ---------- */
 .cabinet-shell{margin:0 0 28px}
-.cabinet-layout{display:grid;grid-template-columns:minmax(246px,300px) minmax(0,1fr);gap:16px;align-items:start}
+.cabinet-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.cabinet-sidebar{width:250px}
 .cabinet-sidebar{position:sticky;top:18px;overflow:hidden;border-radius:22px;padding:20px 18px 18px;background:
     linear-gradient(135deg,#1D51B5 0%,var(--cobalt) 55%,var(--cobalt-ink) 100%);
   color:#fff;box-shadow:0 20px 44px -26px rgba(7,18,42,.75)}
@@ -540,6 +541,9 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 .cabinet-empty h3{margin:0;font-size:18px;letter-spacing:-.02em}
 .cabinet-empty p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55;max-width:54ch}
 .cabinet-empty .ticket{margin:6px 0 0}
+.cabinet-empty .ticket-strip h2{margin:0;font-size:20px;line-height:1.2;letter-spacing:-.02em;font-weight:800;max-width:46ch;color:#fff}
+.cabinet-empty .ticket-kicker{margin:0 0 5px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.68)}
+.cabinet-empty .ticket-lead{margin:0 0 14px;color:rgba(255,255,255,.82);width:100%;font-size:14px;line-height:1.55;max-width:72ch}
 .cabinet-profile-card{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
 .cabinet-profile-card .cabinet-avatar{width:66px;height:66px;border-radius:20px}
 .cabinet-profile-card .cabinet-avatar svg{width:28px;height:28px}
