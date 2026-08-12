@@ -88,7 +88,7 @@ body.compact .ac{width:350px;max-width:350px}
 .authchip-logout{width:32px;height:32px;background:#fff;color:var(--cobalt);
   border:1px solid var(--hair2);box-shadow:0 2px 6px rgba(13,27,51,.1)}
 .authchip-logout:hover{filter:none;box-shadow:0 6px 12px -4px rgba(3,14,38,.2);border-color:var(--cobalt)}
-body.compact .searchpanel{border-radius:14px}
+body.compact .searchpanel{border-radius:14px 0 14px 14px}
 body.compact .fld.fld-to .ac{left:auto;right:0}
 
 .signals{position:relative;margin:10px auto 0;padding:0;background:transparent;border:0;box-shadow:none;overflow:hidden;
