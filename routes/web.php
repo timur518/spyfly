@@ -28,6 +28,7 @@ Route::get('/', function () {
                 'max_stay_days' => $subscription->max_stay_days,
                 'channel' => $subscription->channel,
                 'is_active' => $subscription->is_active,
+                'matched_flights' => $subscription->matched_flights ?? [],
                 'created_at' => $subscription->created_at?->toISOString(),
                 'updated_at' => $subscription->updated_at?->toISOString(),
                 'route_summary' => $subscription->route_summary,
