@@ -312,8 +312,8 @@ function cabinetAvatarMarkup(user){
 
 function subscriptionCardMarkup(item,{history=false}={}){
   const lines=splitSummary(item.route_summary);
-  const title=lines[0]||`Подписка #${item.id}`;
-  const subtitle=lines.slice(1).join(' · ');
+  const title=`${airportCity(item.origin_iata)}${item.destination_iata ? ' - ' + airportCity(item.destination_iata) : ''}`;
+  const subtitle=lines.length ? lines[lines.length - 1] : '';
   const matches=Array.isArray(item.matched_flights)?item.matched_flights:[];
   const minMatchedPrice=matches.reduce((min,flight)=>{
     const price=Number(flight?.price);
