@@ -299,7 +299,7 @@
 
         <div class="fgroup grp-signal subscribe-group">
           <div class="fld fld-price">
-            <label for="subMaxPrice">Максимальная желаемая цена</label>
+            <label for="subMaxPrice">Максимальная цена</label>
             <input name="max_desired_price" id="subMaxPrice" type="number" min="0" step="1" placeholder="Например, 18000" class="has-suffix">
             <span class="fld-suffix" aria-hidden="true">₽</span>
           </div>
