@@ -120,7 +120,7 @@
     <div class="searchstack">
       <div class="authtab" role="group" aria-label="{{ auth()->check() ? 'Профиль и выход' : 'Вход через социальные сети' }}">
         @auth
-          <a href="{{ route('home', ['view' => 'cabinet']) }}" class="authtab-profile authtab-profile-link" id="cabinetToggle" data-open-cabinet>
+          <button type="button" class="authtab-profile authtab-profile-link" id="cabinetToggle" data-open-cabinet>
             <span class="authtab-avatar" aria-hidden="true">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
@@ -129,7 +129,7 @@
               </svg>
             </span>
             <span class="authtab-user">{{ auth()->user()->name }}</span>
-          </a>
+          </button>
           <form method="POST" action="{{ route('logout') }}" class="authtab-logout">
             @csrf
             <button type="submit" class="authchip authchip-logout" title="Выйти из аккаунта" aria-label="Выйти из аккаунта">

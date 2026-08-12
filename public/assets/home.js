@@ -299,8 +299,9 @@ function subscriptionCardMarkup(item,{history=false}={}){
   const lines=splitSummary(item.route_summary);
   const title=lines[0]||`Подписка #${item.id}`;
   const subtitle=lines.slice(1).join(' · ');
-  const status=item.is_active?'Активна':'В архиве';
-  const statusClass=item.is_active?'active':'muted';
+  const status=item.is_active
+    ?'<span class="cabinet-status"><i aria-hidden="true"></i>Сканируем рейсы</span>'
+    :'<span class="cabinet-status inactive"><i aria-hidden="true"></i>Не активна</span>';
   const extra=history&&item.updated_at?`Обновлена ${cabinetDate(item.updated_at)}`:`Создана ${cabinetDate(item.created_at)}`;
   return `
     <article class="cabinet-card">
@@ -310,18 +311,17 @@ function subscriptionCardMarkup(item,{history=false}={}){
           <p>${esc(subtitle||'Маршрут и параметры подписки')}</p>
         </div>
         <div class="cabinet-card-meta">
-          <span class="cabinet-tag ${statusClass}">${esc(status)}</span>
-          <span class="cabinet-tag muted">#${item.id}</span>
+          ${status}
         </div>
       </div>
       <div class="cabinet-card-body">
-        <div class="cabinet-field"><span class="k">Порог</span><span class="v">${esc(item.price_summary||'—')}</span></div>
-        <div class="cabinet-field"><span class="k">Период</span><span class="v">${esc(item.date_range_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Желаемая цена</span><span class="v">${esc(item.price_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Даты рейсов</span><span class="v">${esc(item.date_range_summary||'—')}</span></div>
         <div class="cabinet-field"><span class="k">Длительность</span><span class="v">${esc(item.stay_summary||'—')}</span></div>
-        <div class="cabinet-field"><span class="k">Канал</span><span class="v">${esc(item.channel_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Уведомление в</span><span class="v">${esc(item.channel_summary||'—')}</span></div>
       </div>
       <div class="cabinet-section-divider"></div>
-      <div class="cabinet-field"><span class="k">Статус</span><span class="v">${esc(extra)}</span></div>
+      <div class="cabinet-field"><span class="k">Последнее изменение</span><span class="v">${esc(extra)}</span></div>
     </article>`;
 }
 
@@ -416,7 +416,7 @@ function cabinetSubscriptionsPanel(){
       <div class="cabinet-panel-head">
         <div>
           <h2>Активные подписки</h2>
-          <p>${active.length ? 'Текущие фильтры, которые продолжают ловить подходящие цены.' : 'Подписок пока нет — можно оформить первую прямо отсюда.'}</p>
+          <p>${active.length ? 'Текущие активные подписки, по которым мы ищем подходящие рейсы' : 'Подписок пока нет — можно оформить первую прямо отсюда.'}</p>
         </div>
         <div class="cabinet-tag active">${active.length} шт.</div>
       </div>
@@ -457,13 +457,17 @@ function renderCabinet(section='subscriptions'){
     subscriptionCard.hidden=true;
   }
   cabinetShell.hidden=false;
+  cabinetShell.style.display='block';
   result.hidden=true;
+  result.style.display='none';
 }
 
 function showSearchView(){
   currentView='search';
   cabinetShell.hidden=true;
+  cabinetShell.style.display='none';
   result.hidden=false;
+  result.style.display='';
   if(history.replaceState){
     history.replaceState(null,'',window.location.pathname);
   }
@@ -484,6 +488,7 @@ function showCabinet(section='subscriptions'){
 if(cabinetToggle){
   cabinetToggle.addEventListener('click',e=>{
     e.preventDefault();
+    e.stopPropagation();
     showCabinet('subscriptions');
   });
 }
