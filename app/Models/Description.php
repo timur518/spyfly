@@ -22,6 +22,7 @@ class Description extends Model
         'is_active',
         'channel',
         'last_notified_at',
+        'matched_flights',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class Description extends Model
             'max_desired_price' => 'decimal:2',
             'is_active' => 'boolean',
             'last_notified_at' => 'datetime',
+            'matched_flights' => 'array',
         ];
     }
 

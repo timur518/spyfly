@@ -40,7 +40,9 @@ class FlightSearchController extends Controller
             $params = $this->validateInput($request);
 
             $payload = $this->buildSearchPayload($params, $config);
-            event(new FlightSearchCompleted($params, $payload, $request->user()?->id));
+            if (! $request->boolean('background_scan')) {
+                event(new FlightSearchCompleted($params, $payload, $request->user()?->id));
+            }
 
             return response()->json(['success' => true] + $payload);
         } catch (InvalidArgumentException $e) {

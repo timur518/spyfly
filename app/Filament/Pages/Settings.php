@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\IntegrationSetting;
+use App\Models\MonitoringSetting;
 use App\Models\ProfitabilitySetting;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms\Components\Repeater;
@@ -41,6 +42,7 @@ class Settings extends Page implements HasForms
         $this->form->fill(array_merge(
             IntegrationSetting::current()->attributesToArray(),
             ProfitabilitySetting::current()->attributesToArray(),
+            MonitoringSetting::current()->attributesToArray(),
         ));
     }
 
@@ -108,6 +110,21 @@ class Settings extends Page implements HasForms
                                     ])
                                     ->columns(2),
                             ]),
+                        Tab::make('Мониторинг подписок')
+                            ->schema([
+                                Section::make('Период проверки')
+                                    ->description('Фоновая команда будет запускаться по этому интервалу и обновлять matched_flights у активных подписок.')
+                                    ->schema([
+                                        TextInput::make('subscription_scan_interval_minutes')
+                                            ->label('Проверять подписки каждые N минут')
+                                            ->helperText('Например, 60 = один запуск в час.')
+                                            ->numeric()
+                                            ->required()
+                                            ->minValue(1)
+                                            ->maxValue(1440),
+                                    ])
+                                    ->columns(1),
+                            ]),
                         Tab::make('Авторизация')
                             ->schema([
                                 Section::make('OAuth-провайдеры')
@@ -170,10 +187,14 @@ class Settings extends Page implements HasForms
             'odnoklassniki_client_secret',
         ]));
 
+        MonitoringSetting::current()->update([
+            'subscription_scan_interval_minutes' => $data['subscription_scan_interval_minutes'] ?? 60,
+        ]);
+
         Notification::make()
             ->success()
             ->title('Настройки сохранены')
-            ->body('Параметры выгодности, интеграций и авторизации обновлены.')
+            ->body('Параметры выгодности, интеграций, мониторинга и авторизации обновлены.')
             ->send();
     }
 }

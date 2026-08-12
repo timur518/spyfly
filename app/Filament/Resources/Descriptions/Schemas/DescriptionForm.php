@@ -6,6 +6,7 @@ use App\Models\Airport;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -76,6 +77,16 @@ class DescriptionForm
                             ->label('Активна')
                             ->required(),
                     ]),
+                Section::make('Найденные рейсы')
+                    ->description('Фоновая джоба обновляет это поле с подходящими рейсами в формате JSON.')
+                    ->schema([
+                        Textarea::make('matched_flights')
+                            ->label('Рейсы')
+                            ->rows(10)
+                            ->disabled()
+                            ->formatStateUsing(fn (mixed $state): string => self::prettyJson($state))
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -115,5 +126,23 @@ class DescriptionForm
             'email' => 'Email',
             'telegram' => 'Telegram',
         ];
+    }
+
+    private static function prettyJson(mixed $state): string
+    {
+        if ($state === null || $state === '') {
+            return '';
+        }
+
+        if (is_string($state)) {
+            $decoded = json_decode($state, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?: $state;
+            }
+
+            return $state;
+        }
+
+        return json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?: '';
     }
 }

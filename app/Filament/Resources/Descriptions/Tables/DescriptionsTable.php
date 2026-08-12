@@ -40,6 +40,11 @@ class DescriptionsTable
                     ->label('Канал')
                     ->formatStateUsing(fn (?string $state): HtmlString => self::multiline($state))
                     ->html(),
+                TextColumn::make('matched_flights')
+                    ->label('Рейсы')
+                    ->badge()
+                    ->formatStateUsing(fn (?array $state): string => $state ? count($state) . ' рейсов' : '0 рейсов')
+                    ->color(fn (?array $state): string => $state ? 'info' : 'gray'),
                 TextColumn::make('is_active')
                     ->label('Статус')
                     ->badge()
