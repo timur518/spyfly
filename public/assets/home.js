@@ -267,6 +267,21 @@ function cabinetDate(value){
   return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
 }
 
+function minutesAgo(value){
+  if(!value) return 'Обновлено недавно';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return 'Обновлено недавно';
+  const diff=Math.max(0,Math.round((Date.now()-d.getTime())/60000));
+  if(diff < 1) return 'Обновлено только что';
+  if(diff === 1) return 'Обновлено 1 минуту назад';
+  if(diff < 60) return `Обновлено ${diff} минут назад`;
+  const hours=Math.floor(diff/60);
+  const mins=diff%60;
+  if(hours < 24) return `Обновлено ${hours} ч ${mins ? `${mins} мин` : ''} назад`.trim();
+  const days=Math.floor(hours/24);
+  return `Обновлено ${days} дн. назад`;
+}
+
 function splitSummary(value){
   return String(value||'')
     .split('\n')
@@ -299,20 +314,49 @@ function subscriptionCardMarkup(item,{history=false}={}){
   const lines=splitSummary(item.route_summary);
   const title=lines[0]||`Подписка #${item.id}`;
   const subtitle=lines.slice(1).join(' · ');
-  const status=item.is_active
-    ?'<span class="cabinet-status"><i aria-hidden="true"></i>Сканируем рейсы</span>'
-    :'<span class="cabinet-status inactive"><i aria-hidden="true"></i>Не активна</span>';
-  const extra=history&&item.updated_at?`Обновлена ${cabinetDate(item.updated_at)}`:`Создана ${cabinetDate(item.created_at)}`;
+  const matches=Array.isArray(item.matched_flights)?item.matched_flights:[];
+  const minMatchedPrice=matches.reduce((min,flight)=>{
+    const price=Number(flight?.price);
+    return Number.isFinite(price) && (min===null || price < min) ? price : min;
+  }, null);
+  const summaryText=!item.is_active
+    ?'<span class="cabinet-summary inactive"><i aria-hidden="true"></i><span>Не активна</span></span>'
+    :matches.length
+      ?`<span class="cabinet-summary success"><i aria-hidden="true"></i><span>Есть подходящие рейсы с ценой от <strong>${money(minMatchedPrice)}</strong>.</span></span>`
+      :`<span class="cabinet-summary pending"><i aria-hidden="true"></i><span>Ищем... Пока нет ничего подходящего.</span></span>`;
+  const updatedText=minutesAgo(item.updated_at||item.created_at);
+  const detailsId=`subscription-details-${item.id}`;
+  const detailsRows=matches.slice(0,4).map(f=>{
+    const route=[f.origin_iata,f.destination_iata].filter(Boolean).join(' → ') || 'Маршрут';
+    const date=f.return_at ? `${dShort(f.date)} / ${dShort(String(f.return_at).slice(0,10))}` : dShort(f.date);
+    const airline=f.airline ? `${esc(airlineName(f.airline))}${f.flight_number ? ` · ${esc(String(f.flight_number))}` : ''}` : 'Рейс';
+    return `
+      <div class="cabinet-flight-row">
+        <div class="cabinet-flight-main">
+          <span class="cabinet-flight-route">${esc(route)}</span>
+          <span class="cabinet-flight-meta">${esc(date)} · ${esc(airline)}</span>
+        </div>
+        <div class="cabinet-flight-price">${money(f.price)}</div>
+      </div>`;
+  }).join('');
+  const details = item.is_active ? `
+    <div class="cabinet-card-details" id="${detailsId}" hidden>
+      <div class="cabinet-card-details-head">
+        <span>Подробности</span>
+        <span>${matches.length ? `${matches.length} совпад.` : 'Пока без совпадений'}</span>
+      </div>
+      ${matches.length
+        ? `<div class="cabinet-flight-list">${detailsRows}</div>`
+        : `<p class="cabinet-empty-note">Мы ещё не нашли рейсы, которые попадают в условия этой подписки.</p>`}
+    </div>` : '';
   return `
-    <article class="cabinet-card">
+    <article class="cabinet-card" data-subscription-card="${item.id}">
       <div class="cabinet-card-head">
         <div class="cabinet-card-title">
           <h3>${esc(title)}</h3>
           <p>${esc(subtitle||'Маршрут и параметры подписки')}</p>
         </div>
-        <div class="cabinet-card-meta">
-          ${status}
-        </div>
+        <div class="cabinet-card-updated">${esc(updatedText)}</div>
       </div>
       <div class="cabinet-card-body">
         <div class="cabinet-field"><span class="k">Желаемая цена</span><span class="v">${esc(item.price_summary||'—')}</span></div>
@@ -321,7 +365,11 @@ function subscriptionCardMarkup(item,{history=false}={}){
         <div class="cabinet-field"><span class="k">Уведомление в</span><span class="v">${esc(item.channel_summary||'—')}</span></div>
       </div>
       <div class="cabinet-section-divider"></div>
-      <div class="cabinet-field"><span class="k">Последнее изменение</span><span class="v">${esc(extra)}</span></div>
+      <div class="cabinet-summary-row">
+        ${summaryText}
+        ${item.is_active ? `<button type="button" class="cabinet-summary-btn" data-subscription-toggle data-target="${detailsId}" aria-expanded="false">Подробнее</button>` : ''}
+      </div>
+      ${details}
     </article>`;
 }
 
@@ -495,6 +543,20 @@ if(cabinetToggle){
 
 if(cabinetShell){
   cabinetShell.addEventListener('click',e=>{
+    const detailsBtn=e.target.closest('[data-subscription-toggle]');
+    if(detailsBtn){
+      const targetId=detailsBtn.dataset.target;
+      const details=document.getElementById(targetId);
+      if(details){
+        const isHidden=details.hasAttribute('hidden');
+        if(isHidden) details.removeAttribute('hidden');
+        else details.setAttribute('hidden','');
+        detailsBtn.setAttribute('aria-expanded', String(isHidden));
+        detailsBtn.textContent=isHidden ? 'Скрыть' : 'Подробнее';
+      }
+      return;
+    }
+
     const target=e.target.closest('[data-cabinet-target]');
     if(!target || !cabinetShell.contains(target)) return;
     const section=target.dataset.cabinetTarget;
