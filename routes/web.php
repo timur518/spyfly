@@ -1,12 +1,61 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Models\Description;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('home');
+    $user = auth()->user();
+    $view = request('view') === 'cabinet' ? 'cabinet' : 'search';
+    $cabinet = null;
+
+    if ($user) {
+        $subscriptions = Description::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        $serializeSubscription = static function (Description $subscription): array {
+            return [
+                'id' => $subscription->id,
+                'origin_iata' => $subscription->origin_iata,
+                'destination_iata' => $subscription->destination_iata,
+                'trip_type' => $subscription->trip_type,
+                'max_desired_price' => $subscription->max_desired_price,
+                'min_stay_days' => $subscription->min_stay_days,
+                'max_stay_days' => $subscription->max_stay_days,
+                'channel' => $subscription->channel,
+                'is_active' => $subscription->is_active,
+                'created_at' => $subscription->created_at?->toISOString(),
+                'updated_at' => $subscription->updated_at?->toISOString(),
+                'route_summary' => $subscription->route_summary,
+                'price_summary' => $subscription->price_summary,
+                'stay_summary' => $subscription->stay_summary,
+                'date_range_summary' => $subscription->date_range_summary,
+                'channel_summary' => $subscription->channel_summary,
+            ];
+        };
+
+        $cabinet = [
+            'view' => $view,
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->avatar_url,
+                'provider' => $user->provider,
+            ],
+            'active_count' => $subscriptions->where('is_active', true)->count(),
+            'subscriptions' => $subscriptions->map($serializeSubscription)->values(),
+            'active_subscriptions' => $subscriptions->where('is_active', true)->map($serializeSubscription)->values(),
+            'has_subscriptions' => $subscriptions->isNotEmpty(),
+        ];
+    }
+
+    return view('home', [
+        'cabinet' => $cabinet,
+    ]);
 })->name('home');
 
 Route::get('/sitemap.xml', function () {

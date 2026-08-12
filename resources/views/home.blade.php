@@ -16,6 +16,7 @@
 <meta name="keywords" content="дешевые авиабилеты, скидки на авиабилеты, авиабилеты онлайн, купить дешевые авиабилеты, отслеживание цен на авиабилеты, поиск дешевых билетов на самолет">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="author" content="SpyFly">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <meta name="theme-color" content="#0b0e14">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
@@ -102,7 +103,7 @@
 <noscript><div><img src="https://mc.yandex.ru/watch/111493334" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
 </head>
-<body>
+<body data-page-view="{{ $cabinet['view'] ?? 'search' }}">
 
 <header class="stage" id="stage">
   <div class="stagewrap">
@@ -117,9 +118,9 @@
       </div>
     </div>
     <div class="searchstack">
-      <div class="authtab" role="group" aria-label="Вход через социальные сети">
+      <div class="authtab" role="group" aria-label="{{ auth()->check() ? 'Профиль и выход' : 'Вход через социальные сети' }}">
         @auth
-          <span class="authtab-profile">
+          <a href="{{ route('home', ['view' => 'cabinet']) }}" class="authtab-profile authtab-profile-link" id="cabinetToggle" data-open-cabinet>
             <span class="authtab-avatar" aria-hidden="true">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
@@ -128,7 +129,7 @@
               </svg>
             </span>
             <span class="authtab-user">{{ auth()->user()->name }}</span>
-          </span>
+          </a>
           <form method="POST" action="{{ route('logout') }}" class="authtab-logout">
             @csrf
             <button type="submit" class="authchip authchip-logout" title="Выйти из аккаунта" aria-label="Выйти из аккаунта">
@@ -206,6 +207,8 @@
 </div>
 
 <div id="result" class="result" aria-live="polite"></div>
+
+<section id="cabinetShell" class="cabinet-shell" hidden aria-live="polite"></section>
 
 <section class="ticket" id="subscriptionCard" aria-labelledby="subscriptionTitle" hidden>
   <div class="ticket-strip">
@@ -316,6 +319,13 @@
 </section>
 </main>
 
+<script>
+  window.__CABINET_STATE__ = @json($cabinet, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  window.__HOME_ROUTES__ = @json([
+    'home' => route('home'),
+    'logout' => route('logout'),
+  ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+</script>
 <script defer src="{{ asset('assets/home.js') }}"></script>
 </body>
 </html>

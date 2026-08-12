@@ -15,6 +15,11 @@ const subscriptionOrb=document.getElementById('subscriptionOrb');
 const subscriptionProcessText=document.getElementById('subscriptionProcessText');
 const subscriptionAgainBtn=document.getElementById('subscriptionAgainBtn');
 const subscriptionCard=document.getElementById('subscriptionCard');
+const cabinetShell=document.getElementById('cabinetShell');
+const cabinetToggle=document.getElementById('cabinetToggle');
+const cabinetState=window.__CABINET_STATE__||null;
+const cabinetRoutes=window.__HOME_ROUTES__||{};
+const csrfToken=document.querySelector('meta[name="csrf-token"]')?.content||'';
 const subUserIdInput=subscriptionForm.querySelector('input[name="user_id"]');
 const subOriginInput=document.getElementById('subOrigin');
 const subDestinationInput=document.getElementById('subDestination');
@@ -31,6 +36,10 @@ const subDateTo=document.getElementById('subDateTo');
 const signalsTrack=document.getElementById('signalsTrack');
 const signalsCurrent=document.getElementById('signalsCurrent');
 const signalsNext=document.getElementById('signalsNext');
+const initialView=(document.body.dataset.pageView||cabinetState?.view||'search')==='cabinet'?'cabinet':'search';
+
+let currentView=initialView;
+let cabinetSection='subscriptions';
 
 const money=v=>v==null?'—':new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(v)+' ₽';
 const moneyShort=v=>{
@@ -250,6 +259,245 @@ function resetSubscriptionForm(){
   subscriptionMessage.textContent='';
 }
 if(subscriptionAgainBtn) subscriptionAgainBtn.addEventListener('click',resetSubscriptionForm);
+
+function cabinetDate(value){
+  if(!value) return '—';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function splitSummary(value){
+  return String(value||'')
+    .split('\n')
+    .map(s=>s.trim())
+    .filter(Boolean);
+}
+
+function providerLabel(provider){
+  return ({
+    yandex:'Яндекс',
+    vkontakte:'VK',
+    odnoklassniki:'Одноклассники',
+  })[provider]||'Email';
+}
+
+function cabinetAvatarSvg(){
+  return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
+    <path d="M4.8 21c1.3-3.7 4.3-5.7 7.2-5.7S17.9 17.3 19.2 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function cabinetAvatarMarkup(user){
+  return user?.avatar_url
+    ? `<img class="cabinet-avatar-img" src="${esc(user.avatar_url)}" alt="" aria-hidden="true">`
+    : cabinetAvatarSvg();
+}
+
+function subscriptionCardMarkup(item,{history=false}={}){
+  const lines=splitSummary(item.route_summary);
+  const title=lines[0]||`Подписка #${item.id}`;
+  const subtitle=lines.slice(1).join(' · ');
+  const status=item.is_active?'Активна':'В архиве';
+  const statusClass=item.is_active?'active':'muted';
+  const extra=history&&item.updated_at?`Обновлена ${cabinetDate(item.updated_at)}`:`Создана ${cabinetDate(item.created_at)}`;
+  return `
+    <article class="cabinet-card">
+      <div class="cabinet-card-head">
+        <div class="cabinet-card-title">
+          <h3>${esc(title)}</h3>
+          <p>${esc(subtitle||'Маршрут и параметры подписки')}</p>
+        </div>
+        <div class="cabinet-card-meta">
+          <span class="cabinet-tag ${statusClass}">${esc(status)}</span>
+          <span class="cabinet-tag muted">#${item.id}</span>
+        </div>
+      </div>
+      <div class="cabinet-card-body">
+        <div class="cabinet-field"><span class="k">Порог</span><span class="v">${esc(item.price_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Период</span><span class="v">${esc(item.date_range_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Длительность</span><span class="v">${esc(item.stay_summary||'—')}</span></div>
+        <div class="cabinet-field"><span class="k">Канал</span><span class="v">${esc(item.channel_summary||'—')}</span></div>
+      </div>
+      <div class="cabinet-section-divider"></div>
+      <div class="cabinet-field"><span class="k">Статус</span><span class="v">${esc(extra)}</span></div>
+    </article>`;
+}
+
+function cabinetMenuClass(section){
+  return section===cabinetSection?'is-active':'';
+}
+
+function cabinetSidebar(){
+  const user=cabinetState?.user||{};
+  const activeCount=Number(cabinetState?.active_count||0);
+  const totalCount=Number(cabinetState?.subscriptions?.length||0);
+  return `
+    <aside class="cabinet-sidebar">
+      <div class="cabinet-profilebox">
+        <div class="cabinet-userrow">
+          <div class="cabinet-avatar">${cabinetAvatarMarkup(user)}</div>
+          <div>
+            <div class="cabinet-name">${esc(user.name||'Профиль')}</div>
+            <div class="cabinet-email">${esc(user.email||'—')}</div>
+          </div>
+        </div>
+        <div class="cabinet-pillrow">
+          <span class="cabinet-pill">Активных <strong>${activeCount}</strong></span>
+          <span class="cabinet-pill">Всего <strong>${totalCount}</strong></span>
+        </div>
+      </div>
+      <nav class="cabinet-nav" aria-label="Меню кабинета">
+        <button type="button" data-cabinet-target="profile" class="${cabinetMenuClass('profile')}">Мой профиль</button>
+        <button type="button" data-cabinet-target="subscriptions" class="${cabinetMenuClass('subscriptions')}">Мои подписки <span class="cabinet-nav-count">${activeCount}</span></button>
+        <button type="button" data-cabinet-target="history" class="${cabinetMenuClass('history')}">История подписок</button>
+        <form method="POST" action="${esc(cabinetRoutes.logout||'/logout')}" data-cabinet-logout-form>
+          <input type="hidden" name="_token" value="${esc(csrfToken)}">
+          <button type="submit" class="cabinet-logout-btn" data-cabinet-target="logout"><span>Выйти</span></button>
+        </form>
+      </nav>
+    </aside>`;
+}
+
+function cabinetProfilePanel(){
+  const user=cabinetState?.user||{};
+  const activeCount=Number(cabinetState?.active_count||0);
+  const totalCount=Number(cabinetState?.subscriptions?.length||0);
+  return `
+    <section class="cabinet-hero">
+      <div class="cabinet-hero-top">
+        <div>
+          <p class="cabinet-kicker">Личный кабинет</p>
+          <h1 class="cabinet-title">Мой профиль</h1>
+          <p class="cabinet-subtitle">Управляйте подписками, следите за архивом и возвращайтесь к поиску в один клик.</p>
+        </div>
+        <div class="cabinet-hero-stat">
+          <span class="k">Активных подписок</span>
+          <span class="v">${activeCount}</span>
+          <span class="s">${activeCount ? 'под контролем' : 'пока пусто'}</span>
+        </div>
+      </div>
+      <div class="cabinet-hero-actions">
+        <a href="#" class="cabinet-action" data-cabinet-target="subscriptions">Активные подписки</a>
+        <a href="#" class="cabinet-action" data-cabinet-target="history">История подписок</a>
+      </div>
+    </section>
+    <section class="cabinet-panel">
+      <div class="cabinet-panel-head">
+        <div>
+          <h2>${esc(user.name||'Пользователь')}</h2>
+          <p>${esc(user.email||'—')}</p>
+        </div>
+        <div class="cabinet-tag muted">${esc(providerLabel(user.provider))}</div>
+      </div>
+      <div class="cabinet-profile-card">
+        <div class="cabinet-avatar">${cabinetAvatarMarkup(user)}</div>
+        <div class="cabinet-profile-stack">
+          <div>
+            <div class="cabinet-name">${esc(user.name||'Пользователь')}</div>
+            <div class="cabinet-subtitle" style="margin:4px 0 0">${esc(user.email||'—')}</div>
+          </div>
+          <div class="cabinet-subtitle" style="margin:0">Это основной профиль для управления ценовыми подписками и историей слежения.</div>
+        </div>
+      </div>
+      <div class="cabinet-profile-stats" style="margin-top:16px">
+        <div class="cabinet-stat"><div class="k">Активные</div><div class="v">${activeCount}</div><div class="s">подписок в работе</div></div>
+        <div class="cabinet-stat"><div class="k">Всего</div><div class="v">${totalCount}</div><div class="s">подписок в архиве и работе</div></div>
+        <div class="cabinet-stat"><div class="k">Вход</div><div class="v">${esc(providerLabel(user.provider))}</div><div class="s">текущий способ авторизации</div></div>
+      </div>
+    </section>`;
+}
+
+function cabinetSubscriptionsPanel(){
+  const active=Array.isArray(cabinetState?.active_subscriptions)?cabinetState.active_subscriptions:[];
+  return `
+    <section class="cabinet-panel">
+      <div class="cabinet-panel-head">
+        <div>
+          <h2>Активные подписки</h2>
+          <p>${active.length ? 'Текущие фильтры, которые продолжают ловить подходящие цены.' : 'Подписок пока нет — можно оформить первую прямо отсюда.'}</p>
+        </div>
+        <div class="cabinet-tag active">${active.length} шт.</div>
+      </div>
+      ${active.length ? `<div class="cabinet-grid">${active.map(item=>subscriptionCardMarkup(item)).join('')}</div>` : `
+        <div class="cabinet-empty">
+          <h3>Пока нечего отслеживать</h3>
+          <p>Добавьте маршрут, даты и желаемую цену — и SpyFly начнёт ловить выгодные перелёты за вас.</p>
+          <div class="cabinet-subscription-mount" id="cabinetSubscriptionMount"></div>
+        </div>
+      `}
+    </section>`;
+}
+
+function cabinetHistoryPanel(){
+  const items=Array.isArray(cabinetState?.subscriptions)?cabinetState.subscriptions:[];
+  return `
+    <section class="cabinet-panel">
+      <div class="cabinet-panel-head">
+        <div>
+          <h2>История подписок</h2>
+          <p>${items.length ? 'Все оформленные подписки, включая архивные и отключённые.' : 'История появится после первой оформленной подписки.'}</p>
+        </div>
+        <div class="cabinet-tag muted">${items.length} шт.</div>
+      </div>
+      ${items.length ? `<div class="cabinet-grid">${items.map(item=>subscriptionCardMarkup(item,{history:true})).join('')}</div>` : `<div class="cabinet-empty"><h3>История пока пустая</h3><p>Когда вы оформите первую подписку, здесь появится полный список изменений и архив.</p></div>`}
+    </section>`;
+}
+
+function renderCabinet(section='subscriptions'){
+  if(!cabinetShell || !cabinetState) return;
+  cabinetSection=section;
+  cabinetShell.innerHTML=`<div class="cabinet-layout">${cabinetSidebar()}<div class="cabinet-main">${section==='profile'?cabinetProfilePanel():section==='history'?cabinetHistoryPanel():cabinetSubscriptionsPanel()}</div></div>`;
+  const mount=cabinetShell.querySelector('#cabinetSubscriptionMount');
+  if(mount && subscriptionCard){
+    subscriptionCard.hidden=false;
+    mount.appendChild(subscriptionCard);
+  }else if(subscriptionCard){
+    subscriptionCard.hidden=true;
+  }
+  cabinetShell.hidden=false;
+  result.hidden=true;
+}
+
+function showSearchView(){
+  currentView='search';
+  cabinetShell.hidden=true;
+  result.hidden=false;
+  if(history.replaceState){
+    history.replaceState(null,'',window.location.pathname);
+  }
+}
+
+function showCabinet(section='subscriptions'){
+  if(!cabinetState || !cabinetShell) return;
+  currentView='cabinet';
+  loader.hidden=true;
+  document.body.classList.add('compact');
+  if(history.replaceState){
+    history.replaceState(null,'',`${window.location.pathname}?view=cabinet`);
+  }
+  renderCabinet(section);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+if(cabinetToggle){
+  cabinetToggle.addEventListener('click',e=>{
+    e.preventDefault();
+    showCabinet('subscriptions');
+  });
+}
+
+if(cabinetShell){
+  cabinetShell.addEventListener('click',e=>{
+    const target=e.target.closest('[data-cabinet-target]');
+    if(!target || !cabinetShell.contains(target)) return;
+    const section=target.dataset.cabinetTarget;
+    if(section==='logout') return;
+    e.preventDefault();
+    showCabinet(section);
+  });
+}
 
 let airportsReady=null;
 async function loadAirports(){
@@ -775,6 +1023,7 @@ function render(d){
 
 form.addEventListener('submit',async e=>{
   e.preventDefault();
+  showSearchView();
   document.body.classList.add('compact'); // сцена плавно поднимается и становится шапкой
   window.scrollTo({top:0,behavior:'smooth'});
   scanBtn.disabled=true;
@@ -870,6 +1119,9 @@ oneWaySel.addEventListener('change',syncTripFields);
 oneWaySel.addEventListener('change',syncSubscriptionDefaults);
 syncTripFields();
 syncSubscriptionDefaults();
+if(currentView==='cabinet' && cabinetState){
+  showCabinet(cabinetSection);
+}
 
 subscriptionForm.addEventListener('submit',async e=>{
   e.preventDefault();
