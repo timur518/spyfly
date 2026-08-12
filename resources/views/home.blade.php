@@ -118,41 +118,41 @@
       </div>
     </div>
     <div class="searchstack">
-      <div class="authtab" role="group" aria-label="{{ auth()->check() ? 'Профиль и выход' : 'Вход через социальные сети' }}">
-        @auth
-          <button type="button" class="authtab-profile authtab-profile-link" id="cabinetToggle" data-open-cabinet>
-            <span class="authtab-avatar" aria-hidden="true">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
-                <path d="M4.8 21c1.3-3.7 4.3-5.7 7.2-5.7S17.9 17.3 19.2 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                <path d="M16.8 5.5c1.4.7 2.4 2 2.8 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>
-              </svg>
-            </span>
-            <span class="authtab-user">{{ auth()->user()->name }}</span>
-          </button>
-          <form method="POST" action="{{ route('logout') }}" class="authtab-logout">
-            @csrf
-            <button type="submit" class="authchip authchip-logout" title="Выйти из аккаунта" aria-label="Выйти из аккаунта">
-              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none">
-                <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M15 12H4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-                <path d="M14 4h4.2A1.8 1.8 0 0 1 20 5.8v12.4A1.8 1.8 0 0 1 18.2 20H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
-              </svg>
-            </button>
-          </form>
-        @else
-          <span class="authtab-label">Войдите, чтобы найти большие скидки:</span>
-          <a href="{{ route('social.redirect', 'yandex') }}" class="authchip authchip-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
-            <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10.4" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#fff">Я</text></svg>
-          </a>
-          <a href="{{ route('social.redirect', 'vkontakte') }}" class="authchip authchip-vk" title="Войти через VK" aria-label="Войти через VK">
-            <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="#fff">VK</text></svg>
-          </a>
-          <a href="{{ route('social.redirect', 'odnoklassniki') }}" class="authchip authchip-ok" title="Войти через OK" aria-label="Войти через OK">
-            <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="800" fill="#fff">OK</text></svg>
-          </a>
-        @endauth
-      </div>
+          <div class="authtab" role="group" aria-label="{{ auth()->check() ? 'Профиль и выход' : 'Вход через социальные сети' }}">
+            @auth
+              <button type="button" class="authtab-profile authtab-profile-link" id="cabinetToggle" data-open-cabinet>
+                <span class="authtab-avatar" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 13.2c3.1 0 5.6-2.5 5.6-5.6S15.1 2 12 2 6.4 4.5 6.4 7.6s2.5 5.6 5.6 5.6Z" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="M4.8 21c1.3-3.7 4.3-5.7 7.2-5.7S17.9 17.3 19.2 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M16.8 5.5c1.4.7 2.4 2 2.8 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>
+                  </svg>
+                </span>
+                <span class="authtab-user">{{ auth()->user()->name }}</span>
+              </button>
+              <form method="POST" action="{{ route('logout') }}" class="authtab-logout">
+                @csrf
+                <button type="submit" class="authchip authchip-logout" title="Выйти из аккаунта" aria-label="Выйти из аккаунта">
+                  <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                    <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 12H4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                    <path d="M14 4h4.2A1.8 1.8 0 0 1 20 5.8v12.4A1.8 1.8 0 0 1 18.2 20H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+                  </svg>
+                </button>
+              </form>
+            @else
+              <span class="authtab-label">Войдите, чтобы найти большие скидки:</span>
+              <a href="{{ route('social.redirect', 'yandex') }}" class="authchip authchip-ya" title="Войти через Яндекс" aria-label="Войти через Яндекс">
+                <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10.4" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#fff">Я</text></svg>
+              </a>
+              <a href="{{ route('social.redirect', 'vkontakte') }}" class="authchip authchip-vk" title="Войти через VK" aria-label="Войти через VK">
+                <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7.5" font-weight="800" fill="#fff">VK</text></svg>
+              </a>
+              <a href="{{ route('social.redirect', 'odnoklassniki') }}" class="authchip authchip-ok" title="Войти через OK" aria-label="Войти через OK">
+                <svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><text x="7" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="800" fill="#fff">OK</text></svg>
+              </a>
+            @endauth
+          </div>
       <section class="panel searchpanel">
       <form id="form" class="search">
         <div class="fgroup grp-route">

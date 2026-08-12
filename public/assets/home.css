@@ -47,6 +47,11 @@ body.compact .stagebrand{margin-bottom:0}
   transition:font-size .8s cubic-bezier(.22,.85,.26,1),margin .8s cubic-bezier(.22,.85,.26,1),letter-spacing .8s}
 .stage h1 .hl{color:#A8C7FF}
 body.compact .stage h1{font-size:18px;margin:0;letter-spacing:-.01em}
+body.compact .stagecopy{align-items:flex-start}
+@media(min-width:769px){
+  body.compact .stagehead{align-items:flex-start;margin-bottom:6px}
+  body.compact .authtab{transform:translateY(-52px)}
+}
 .stage .sub{max-height:150px;overflow:hidden;margin:0 auto 36px;max-width:620px;color:rgba(255,255,255,.72);
   font-size:16px;line-height:1.6;transition:max-height .6s ease,opacity .4s ease,margin .6s ease}
 body.compact .stage .sub{display:none}
@@ -61,8 +66,8 @@ body.compact .searchstack{max-width:1080px}
 body.compact .searchpanel{padding:10px;box-shadow:var(--shadow)}
 body.compact .ac{width:350px;max-width:350px}
 
-.authtab{display:flex;align-items:center;justify-content:center;gap:9px;
-  width:fit-content;max-width:100%;margin:0 auto;
+.authtab{display:flex;align-items:center;justify-content:flex-end;gap:9px;
+  width:fit-content;max-width:100%;margin:0 0 0 auto;
   background:var(--card);border:1px solid var(--hair);border-bottom:0;
   border-radius:12px 12px 0 0;padding:8px 14px}
 .authtab-profile{display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
