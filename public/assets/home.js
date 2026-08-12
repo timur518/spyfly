@@ -330,13 +330,25 @@ function subscriptionCardMarkup(item,{history=false}={}){
     const route=[f.origin_iata,f.destination_iata].filter(Boolean).join(' → ') || 'Маршрут';
     const date=f.return_at ? `${dShort(f.date)} / ${dShort(String(f.return_at).slice(0,10))}` : dShort(f.date);
     const airline=f.airline ? `${esc(airlineName(f.airline))}${f.flight_number ? ` · ${esc(String(f.flight_number))}` : ''}` : 'Рейс';
+    const buyUrl=buyLink(
+      {date:f.date, return_at:f.return_at},
+      {
+        origin:f.origin_iata,
+        destination:f.destination_iata,
+        one_way:f.trip_type === 'one_way',
+        buy_prefix:cabinetState?.buy_prefix || null,
+      },
+    );
     return `
       <div class="cabinet-flight-row">
         <div class="cabinet-flight-main">
           <span class="cabinet-flight-route">${esc(route)}</span>
           <span class="cabinet-flight-meta">${esc(date)} · ${esc(airline)}</span>
         </div>
-        <div class="cabinet-flight-price">${money(f.price)}</div>
+        <div class="cabinet-flight-actions">
+          <div class="cabinet-flight-price">${money(f.price)}</div>
+          ${buyUrl ? `<a class="cabinet-flight-link" href="${esc(buyUrl)}" target="_blank" rel="noopener">В Aviasales</a>` : ''}
+        </div>
       </div>`;
   }).join('');
   const details = item.is_active ? `

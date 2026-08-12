@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Models\Description;
+use App\Models\IntegrationSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,15 @@ Route::get('/', function () {
             ->where('user_id', $user->id)
             ->latest()
             ->get();
+        $integration = IntegrationSetting::current();
+        $buyPrefix = blank($integration->travelpayouts_partner_id)
+            || blank($integration->travelpayouts_tp_trs)
+            || blank($integration->travelpayouts_tp_p)
+            ? null
+            : 'https://tp.media/r?campaign_id=100&marker=' . rawurlencode((string) $integration->travelpayouts_partner_id)
+                . '&p=' . rawurlencode((string) $integration->travelpayouts_tp_p)
+                . '&trs=' . rawurlencode((string) $integration->travelpayouts_tp_trs)
+                . '&u=';
 
         $serializeSubscription = static function (Description $subscription): array {
             return [
@@ -48,6 +58,7 @@ Route::get('/', function () {
                 'provider' => $user->provider,
             ],
             'active_count' => $subscriptions->where('is_active', true)->count(),
+            'buy_prefix' => $buyPrefix,
             'subscriptions' => $subscriptions->map($serializeSubscription)->values(),
             'active_subscriptions' => $subscriptions->where('is_active', true)->map($serializeSubscription)->values(),
             'has_subscriptions' => $subscriptions->isNotEmpty(),
