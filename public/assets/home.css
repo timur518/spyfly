@@ -47,11 +47,6 @@ body.compact .stagebrand{margin-bottom:0}
   transition:font-size .8s cubic-bezier(.22,.85,.26,1),margin .8s cubic-bezier(.22,.85,.26,1),letter-spacing .8s}
 .stage h1 .hl{color:#A8C7FF}
 body.compact .stage h1{font-size:18px;margin:0;letter-spacing:-.01em}
-body.compact .stagecopy{align-items:flex-start}
-@media(min-width:769px){
-  body.compact .stagehead{align-items:flex-start;margin-bottom:6px}
-  body.compact .authtab{transform:translateY(-52px)}
-}
 .stage .sub{max-height:150px;overflow:hidden;margin:0 auto 36px;max-width:620px;color:rgba(255,255,255,.72);
   font-size:16px;line-height:1.6;transition:max-height .6s ease,opacity .4s ease,margin .6s ease}
 body.compact .stage .sub{display:none}
@@ -590,7 +585,7 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
   .ticket-footer{flex-wrap:wrap}
   .subhint{order:3;flex-basis:100%}
   .cabinet-layout{grid-template-columns:1fr}
-  .cabinet-sidebar{position:relative;top:0}
+  .cabinet-sidebar{position:relative;top:0;width:100%}
 }
 @media(max-width:720px){
   .board{grid-template-columns:1fr 1fr}
