@@ -537,7 +537,7 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 .cabinet-field{display:grid;gap:2px}
 .cabinet-field .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
 .cabinet-field .v{font-size:13px;line-height:1.45;color:var(--ink)}
-.cabinet-empty{display:grid;gap:12px;justify-items:start;padding:18px 0 6px}
+.cabinet-empty{display:grid;gap:12px;justify-items:start;}
 .cabinet-empty h3{margin:0;font-size:18px;letter-spacing:-.02em}
 .cabinet-empty p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55;max-width:54ch}
 .cabinet-empty .ticket{margin:6px 0 0}
@@ -553,7 +553,7 @@ body.compact .dtoggle{order:1;grid-column:1/-1;padding:9px 14px}
 .cabinet-stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
 .cabinet-stat .v{margin-top:6px;font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink)}
 .cabinet-stat .s{margin-top:3px;font-size:12px;color:var(--muted)}
-.cabinet-subscription-mount{margin-top:16px}
+.cabinet-subscription-mount{}
 .cabinet-section-divider{height:1px;background:var(--hair);margin:16px 0}
 
 /* ---------- Confirm modal ---------- */
