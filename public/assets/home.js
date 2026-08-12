@@ -545,8 +545,6 @@ function cabinetSubscriptionsPanel(){
       </div>
       ${active.length ? `<div class="cabinet-grid">${active.map(item=>subscriptionCardMarkup(item)).join('')}</div>` : `
         <div class="cabinet-empty">
-          <h3>Пока нечего отслеживать</h3>
-          <p>Добавьте маршрут, даты и желаемую цену — и SpyFly начнёт ловить выгодные перелёты за вас.</p>
           <div class="cabinet-subscription-mount" id="cabinetSubscriptionMount"></div>
         </div>
       `}
