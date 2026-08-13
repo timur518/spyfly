@@ -953,6 +953,120 @@ function attachChartEvents(){
   hit.addEventListener('touchend',onLeave);
 }
 
+/* ---------- Dual chart (туда/обратно) — только для режима "туда-обратно" ---------- */
+let dualChartState=null;
+
+function buildDualChart(outPoints,backPoints){
+  const all=[...outPoints,...backPoints];
+  if(all.length<2)return '<div class="empty">Недостаточно данных для графика.</div>';
+
+  const W=1060,H=340,padL=64,padR=18,padT=18,padB=44;
+  const iw=W-padL-padR, ih=H-padT-padB;
+
+  const dates=[...new Set(all.map(p=>p.date))].sort();
+  const t0=new Date(dates[0]+'T12:00:00').getTime();
+  const t1=new Date(dates[dates.length-1]+'T12:00:00').getTime();
+
+  const vals=all.map(p=>p.price);
+  let vMin=Math.min(...vals), vMax=Math.max(...vals);
+  const vPad=(vMax-vMin)*0.12||vMin*0.1||1000;
+  vMin=Math.max(0,vMin-vPad); vMax+=vPad;
+
+  const X=d=>padL+iw*((new Date(d+'T12:00:00').getTime()-t0)/Math.max(1,t1-t0));
+  const Y=v=>padT+ih*(1-(v-vMin)/Math.max(1,vMax-vMin));
+
+  const yTicks=[];
+  for(let i=0;i<=4;i++)yTicks.push(vMin+(vMax-vMin)*i/4);
+
+  const sortedAll=[...all].sort((a,b)=>a.date.localeCompare(b.date));
+  const monthsSet=[];
+  const seen=new Set();
+  sortedAll.forEach(p=>{const ym=p.date.slice(0,7);if(!seen.has(ym)){seen.add(ym);monthsSet.push(ym);}});
+
+  const lineFor=pts=>pts.length?pts.map((p,i)=>`${i?'L':'M'}${X(p.date).toFixed(1)},${Y(p.price).toFixed(1)}`).join(''):'';
+  const outLine=lineFor(outPoints);
+  const backLine=lineFor(backPoints);
+
+  const axisFont=`font-family="'JetBrains Mono',monospace" font-size="11"`;
+  const gridY=yTicks.map(v=>`<line x1="${padL}" y1="${Y(v).toFixed(1)}" x2="${W-padR}" y2="${Y(v).toFixed(1)}" stroke="#E7EDF4" stroke-width="1"/>`).join('');
+  const labelsY=yTicks.map(v=>`<text x="${padL-10}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end" ${axisFont} fill="#8598B0">${moneyShort(v)}</text>`).join('');
+  const labelsX=monthsSet.map(ym=>{
+    const first=sortedAll.find(p=>p.date.startsWith(ym));
+    return first?`<text x="${X(first.date).toFixed(1)}" y="${H-14}" text-anchor="middle" ${axisFont} fill="#8598B0" style="text-transform:uppercase;letter-spacing:.08em">${monthShort(ym)}</text>`:'';
+  }).join('');
+  const monthLines=monthsSet.slice(1).map(ym=>{
+    const first=sortedAll.find(p=>p.date.startsWith(ym));
+    return first?`<line x1="${X(first.date).toFixed(1)}" y1="${padT}" x2="${X(first.date).toFixed(1)}" y2="${padT+ih}" stroke="#EEF3F8" stroke-width="1"/>`:'';
+  }).join('');
+
+  dualChartState={outPoints,backPoints,dates,X,Y,padL,padT,iw,ih,W,H};
+
+  return `
+  <svg id="chartSvg" class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="График цен по датам вылета туда и обратно">
+    ${gridY}${monthLines}
+    <line x1="${padL}" y1="${padT+ih}" x2="${W-padR}" y2="${padT+ih}" stroke="#C9D5E2" stroke-width="1"/>
+    ${labelsY}${labelsX}
+    ${outLine?`<path d="${outLine}" fill="none" stroke="#16439C" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`:''}
+    ${backLine?`<path d="${backLine}" fill="none" stroke="#E08A2C" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`:''}
+    <circle id="hoverDotOut" r="4.5" fill="#16439C" stroke="#fff" stroke-width="2" opacity="0"/>
+    <circle id="hoverDotBack" r="4.5" fill="#E08A2C" stroke="#fff" stroke-width="2" opacity="0"/>
+    <line id="hoverLine" y1="${padT}" y2="${padT+ih}" stroke="#B9C8DA" stroke-width="1" opacity="0"/>
+    <rect x="${padL}" y="${padT}" width="${iw}" height="${ih}" fill="transparent" id="chartHit"/>
+  </svg>`;
+}
+
+function attachDualChartEvents(){
+  const svg=document.getElementById('chartSvg');
+  if(!svg||!dualChartState)return;
+  const tooltip=document.getElementById('tooltip');
+  const hit=document.getElementById('chartHit');
+  const dotOut=document.getElementById('hoverDotOut');
+  const dotBack=document.getElementById('hoverDotBack');
+  const vline=document.getElementById('hoverLine');
+  const {outPoints,backPoints,dates,X,Y}=dualChartState;
+  const xs=dates.map(d=>X(d));
+
+  function onMove(evt){
+    const rect=svg.getBoundingClientRect();
+    const scaleX=svg.viewBox.baseVal.width/rect.width;
+    const mx=(evt.clientX-rect.left)*scaleX;
+    let lo=0,hi=xs.length-1;
+    while(hi-lo>1){const mid=(lo+hi)>>1;if(xs[mid]<mx)lo=mid;else hi=mid;}
+    const idx=(mx-xs[lo]<=xs[hi]-mx)?lo:hi;
+    const date=dates[idx];
+    const cx=X(date);
+    const outP=outPoints.find(p=>p.date===date);
+    const backP=backPoints.find(p=>p.date===date);
+
+    vline.setAttribute('x1',cx);vline.setAttribute('x2',cx);vline.setAttribute('opacity','1');
+    if(outP){dotOut.setAttribute('cx',cx);dotOut.setAttribute('cy',Y(outP.price));dotOut.setAttribute('opacity','1');}
+    else{dotOut.setAttribute('opacity','0');}
+    if(backP){dotBack.setAttribute('cx',cx);dotBack.setAttribute('cy',Y(backP.price));dotBack.setAttribute('opacity','1');}
+    else{dotBack.setAttribute('opacity','0');}
+
+    const refPrice=outP?.price??backP?.price??0;
+    const px=rect.left+cx/scaleX-rect.left;
+    const py=Y(refPrice)/(svg.viewBox.baseVal.height/rect.height);
+    tooltip.style.left=px+'px';
+    tooltip.style.top=py+'px';
+    tooltip.innerHTML=`<div class="td">${esc(dLong(date))}</div>`
+      +(outP?`<div class="tp"><i class="sw" style="background:#16439C;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Туда: ${money(outP.price)}</div>`:'')
+      +(backP?`<div class="tp"><i class="sw" style="background:#E08A2C;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Обратно: ${money(backP.price)}</div>`:'');
+    tooltip.style.opacity='1';
+  }
+  function onLeave(){
+    tooltip.style.opacity='0';
+    dotOut.setAttribute('opacity','0');
+    dotBack.setAttribute('opacity','0');
+    vline.setAttribute('opacity','0');
+  }
+  hit.addEventListener('mousemove',onMove);
+  hit.addEventListener('mouseleave',onLeave);
+  hit.addEventListener('touchstart',e=>{if(e.touches[0])onMove(e.touches[0]);},{passive:true});
+  hit.addEventListener('touchmove',e=>{if(e.touches[0])onMove(e.touches[0]);},{passive:true});
+  hit.addEventListener('touchend',onLeave);
+}
+
 /* ---------- Best flights ---------- */
 function collectBestFlights(d,minPrice){
   const server=d.analysis?.best_flights;
@@ -995,9 +1109,9 @@ function legBlock(tag,leg){
   <div class="leg">
     <div class="leg-head"><span class="tag">${tag}</span><span class="d">${esc(leg.date?dLong(leg.date):'—')}</span></div>
     <div class="bp-route">
-      <span class="iata">${dep}</span>
+      <span class="iata">${dep||'—'}</span>
       ${pathBlock(leg.stops,leg.transfers,leg.duration)}
-      <span class="iata">${arr}</span>
+      <span class="iata">${arr||'—'}</span>
     </div>
     <div class="bp-cities">
       <span>${esc(airportCity(leg.origin))}${dep?` · <span class="t">${esc(leg.origin)}</span>`:''}</span>
@@ -1086,9 +1200,9 @@ function boardingPass(f,m,minPrice){
     <div class="bp-main">
       <div class="bp-top"><span class="d">${esc(dLong(f.date))}</span><span class="al">${airline}</span></div>
       <div class="bp-route">
-        <span class="iata">${dep}</span>
+        <span class="iata">${dep||'—'}</span>
         ${pathBlock(f.stops,f.transfers,f.duration)}
-        <span class="iata">${arr}</span>
+        <span class="iata">${arr||'—'}</span>
       </div>
       <div class="bp-cities">
         <span>${esc(airportCity(m.origin))}${dep?` · <span class="t">${esc(m.origin)}</span>`:''}</span>
@@ -1109,6 +1223,10 @@ function render(d){
   const bestFlights=collectBestFlights(d,minPrice);
   const cheapest=[...points].sort((x,y)=>x.price-y.price).slice(0,5);
   const scannedFlights=m.scanned_flights??((d.calendar?.length||0)+(d.month_matrix?.length||0)+(d.latest?.length||0));
+
+  const legOut=d.leg_prices?.out||[];
+  const legBack=d.leg_prices?.back||[];
+  const useDualChart=!m.one_way&&(legOut.length>1||legBack.length>1);
 
   result.innerHTML=`
     <div class="scanline">Просканировано · ${m.total_days} ${plural(m.total_days,'день','дня','дней')} · ${scannedFlights} ${plural(scannedFlights,'рейс','рейса','рейсов')}</div>
@@ -1135,17 +1253,22 @@ function render(d){
     <section class="sect">
       <div class="shead">
         <h2>Цены по датам вылета</h2>
-        <p class="sub">Минимальные цены на авиабилеты в ваши даты</p>
+        <p class="sub">${useDualChart?'Минимальные цены отдельно на вылет туда и на обратный рейс':'Минимальные цены на авиабилеты в ваши даты'}</p>
       </div>
       <div class="panel chartpanel">
         <div class="chartbox">
-          ${buildChart(points,a.baseline_avg??a.overall?.avg)}
+          ${useDualChart?buildDualChart(legOut,legBack):buildChart(points,a.baseline_avg??a.overall?.avg)}
           <div id="tooltip" class="tooltip"></div>
         </div>
         <div class="legend">
+          ${useDualChart?`
+          <span class="li"><i class="sw" style="background:#16439C;width:10px;height:10px;border-radius:50%;display:inline-block"></i>Туда</span>
+          <span class="li"><i class="sw" style="background:#E08A2C;width:10px;height:10px;border-radius:50%;display:inline-block"></i>Обратно</span>
+          `:`
           <span class="li"><i class="sw dash"></i>Средняя цена периода</span>
           <span class="li"><i class="sw dot"></i>Самая выгодная цена</span>
           <span class="li"><i class="sw dot-red"></i>Самая дорогая цена</span>
+          `}
         </div>
       </div>
     </section>
@@ -1196,7 +1319,11 @@ function render(d){
     mount.appendChild(subscriptionCard);
   }
 
-  attachChartEvents();
+  if(useDualChart){
+    attachDualChartEvents();
+  } else {
+    attachChartEvents();
+  }
 }
 
 form.addEventListener('submit',async e=>{

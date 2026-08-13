@@ -125,59 +125,77 @@ class FlightSearchController extends Controller
         $latestRows = [];
         $requests = [];
         $droppedByTripLength = [];
+        $scannedFlightsExtra = 0;
+        $legPrices = null;
 
-        foreach ($months as $month) {
-            if (! $oneWay) {
-                $calendar = $this->tpRequest('/v1/prices/calendar', [
+        if ($oneWay) {
+            foreach ($months as $month) {
+                $matrix = $this->tpRequest('/v2/prices/month-matrix', [
                     'origin' => $origin,
                     'destination' => $destination,
-                    'depart_date' => $month,
-                    'calendar_type' => 'departure_date',
+                    'month' => $month . '-01',
                     'currency' => 'RUB',
-                    'length' => $length,
                     'show_to_affiliates' => 'true',
-                    'direct' => $direct ? 'true' : null,
                 ], $config);
 
-                $calendarRows = array_merge($calendarRows, $this->normalizeCalendar($calendar, $from, $to));
-                $requests[] = ['method' => 'v1/prices/calendar', 'month' => $month, 'ok' => true];
+                $matrixRows = array_merge($matrixRows, $this->normalizeMatrix($matrix, $from, $to));
+                $requests[] = ['method' => 'v2/prices/month-matrix', 'month' => $month, 'ok' => true];
+
+                $page = 1;
+                $limit = 1000;
+                do {
+                    $latest = $this->tpRequest('/v2/prices/latest', [
+                        'origin' => $origin,
+                        'destination' => $destination,
+                        'currency' => 'RUB',
+                        'period_type' => 'month',
+                        'beginning_of_period' => $month . '-01',
+                        'page' => $page,
+                        'limit' => $limit,
+                        'show_to_affiliates' => 'true',
+                        'sorting' => 'price',
+                        'trip_class' => 0,
+                        'one_way' => 'true',
+                        'trip_duration' => null,
+                    ], $config);
+
+                    $latestRows = array_merge($latestRows, $this->normalizeLatest($latest, $from, $to));
+                    $requests[] = ['method' => 'v2/prices/latest', 'month' => $month, 'page' => $page, 'ok' => true];
+
+                    $count = isset($latest['data']) && is_array($latest['data']) ? count($latest['data']) : 0;
+                    $page++;
+                } while ($count === $limit && $page <= 20);
+            }
+        } else {
+            // Собираем маршрут "туда" и "обратно" отдельно как one-way перелёты,
+            // а затем сами склеиваем самые дешёвые пары под нужную длительность поездки —
+            // это даёт намного больше вариантов, чем готовые round-trip предложения провайдера.
+            $extendedToDate = $toDate->modify('+' . ($length + 1) . ' days');
+            $backMonths = $this->monthsBetween($fromDate, $extendedToDate);
+
+            $outRows = $this->fetchOneWayLegRows($origin, $destination, $months, $from, $to, $config, $requests);
+            $backRows = $this->fetchOneWayLegRows($destination, $origin, $backMonths, $from, $extendedToDate->format('Y-m-d'), $config, $requests);
+
+            if ($direct) {
+                $outRows = $this->filterDirectRows($outRows);
+                $backRows = $this->filterDirectRows($backRows);
             }
 
-            $matrix = $this->tpRequest('/v2/prices/month-matrix', [
-                'origin' => $origin,
-                'destination' => $destination,
-                'month' => $month . '-01',
-                'currency' => 'RUB',
-                'show_to_affiliates' => 'true',
-            ], $config);
+            $scannedFlightsExtra = count($outRows) + count($backRows);
+            $matrixRows = $this->buildRoundTripPairs($outRows, $backRows, $length, $from, $to);
 
-            $matrixRows = array_merge($matrixRows, $this->normalizeMatrix($matrix, $from, $to));
-            $requests[] = ['method' => 'v2/prices/month-matrix', 'month' => $month, 'ok' => true];
-
-            $page = 1;
-            $limit = 1000;
-            do {
-                $latest = $this->tpRequest('/v2/prices/latest', [
-                    'origin' => $origin,
-                    'destination' => $destination,
-                    'currency' => 'RUB',
-                    'period_type' => 'month',
-                    'beginning_of_period' => $month . '-01',
-                    'page' => $page,
-                    'limit' => $limit,
-                    'show_to_affiliates' => 'true',
-                    'sorting' => 'price',
-                    'trip_class' => 0,
-                    'one_way' => $oneWay ? 'true' : 'false',
-                    'trip_duration' => $oneWay ? null : $length,
-                ], $config);
-
-                $latestRows = array_merge($latestRows, $this->normalizeLatest($latest, $from, $to));
-                $requests[] = ['method' => 'v2/prices/latest', 'month' => $month, 'page' => $page, 'ok' => true];
-
-                $count = isset($latest['data']) && is_array($latest['data']) ? count($latest['data']) : 0;
-                $page++;
-            } while ($count === $limit && $page <= 20);
+            // Отдельные ряды "туда" и "обратно" для двух линий на графике —
+            // в отличие от $matrixRows (уже склеенные пары), здесь цена только за одну "ногу".
+            $legPrices = [
+                'out' => array_map(
+                    static fn (array $r): array => ['date' => $r['date'], 'price' => $r['price']],
+                    $this->bestByDate($outRows),
+                ),
+                'back' => array_map(
+                    static fn (array $r): array => ['date' => $r['date'], 'price' => $r['price']],
+                    $this->bestByDate($backRows),
+                ),
+            ];
         }
 
         $calendarRows = $this->withRouteDefaults(
@@ -273,7 +291,9 @@ class FlightSearchController extends Controller
                 'months' => $months,
                 'total_days' => $totalDays,
                 'covered_days' => $coveredDays,
-                'scanned_flights' => count($calendarRows) + count($matrixRows) + count($latestRows),
+                'scanned_flights' => $oneWay
+                    ? count($calendarRows) + count($matrixRows) + count($latestRows)
+                    : $scannedFlightsExtra + count($matrixRows),
                 'coverage_percent' => $coveragePercent,
                 'generated_at' => gmdate('c'),
                 'partner_id' => $config['partner_id'],
@@ -300,6 +320,7 @@ class FlightSearchController extends Controller
             'calendar' => $this->bestByDate($calendarRows),
             'month_matrix' => $this->bestByDate($matrixRows),
             'latest' => $this->bestByDate($latestRows),
+            'leg_prices' => $legPrices,
             'diagnostics' => [
                 'missing_dates_count' => count($missingDates),
                 'missing_dates_sample' => array_slice($missingDates, 0, 31),
@@ -532,6 +553,175 @@ class FlightSearchController extends Controller
     }
 
     /**
+     * Забираем все one-way перелёты по одному направлению за нужные месяцы:
+     * из v2/month-matrix берём только "чистые" one-way строки (без return_date),
+     * из v2/latest — свежие one-way предложения. Это плечо ("туда" либо "обратно"),
+     * из которых потом сами собираем пары.
+     *
+     * @param array<int, string> $months
+     * @param array<string, mixed> $config
+     * @param array<int, mixed> $requests
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchOneWayLegRows(string $legOrigin, string $legDestination, array $months, string $from, string $to, array $config, array &$requests): array
+    {
+        $rows = [];
+
+        foreach ($months as $month) {
+            $matrix = $this->tpRequest('/v2/prices/month-matrix', [
+                'origin' => $legOrigin,
+                'destination' => $legDestination,
+                'month' => $month . '-01',
+                'currency' => 'RUB',
+                'show_to_affiliates' => 'true',
+            ], $config);
+
+            $matrixRows = array_values(array_filter(
+                $this->normalizeMatrix($matrix, $from, $to),
+                static fn (array $row): bool => empty($row['return_at']),
+            ));
+            $rows = array_merge($rows, $matrixRows);
+            $requests[] = ['method' => 'v2/prices/month-matrix', 'purpose' => 'leg', 'route' => $legOrigin . '-' . $legDestination, 'month' => $month, 'ok' => true];
+
+            $page = 1;
+            $limit = 1000;
+            do {
+                $latest = $this->tpRequest('/v2/prices/latest', [
+                    'origin' => $legOrigin,
+                    'destination' => $legDestination,
+                    'currency' => 'RUB',
+                    'period_type' => 'month',
+                    'beginning_of_period' => $month . '-01',
+                    'page' => $page,
+                    'limit' => $limit,
+                    'show_to_affiliates' => 'true',
+                    'sorting' => 'price',
+                    'trip_class' => 0,
+                    'one_way' => 'true',
+                    'trip_duration' => null,
+                ], $config);
+
+                $rows = array_merge($rows, $this->normalizeLatest($latest, $from, $to));
+                $requests[] = ['method' => 'v2/prices/latest', 'purpose' => 'leg', 'route' => $legOrigin . '-' . $legDestination, 'month' => $month, 'page' => $page, 'ok' => true];
+
+                $count = isset($latest['data']) && is_array($latest['data']) ? count($latest['data']) : 0;
+                $page++;
+            } while ($count === $limit && $page <= 20);
+        }
+
+        return $this->withRouteDefaults($rows, $legOrigin, $legDestination);
+    }
+
+    /**
+     * Для каждой даты вылета "туда" оставляет одну (самую дешёвую) строку.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<string, array<string, mixed>>
+     */
+    private function bestByDateIndexed(array $rows): array
+    {
+        $best = [];
+
+        foreach ($rows as $row) {
+            $date = (string) ($row['date'] ?? '');
+            if ($date === '' || ! isset($row['price'])) {
+                continue;
+            }
+
+            if (! isset($best[$date])) {
+                $best[$date] = $row;
+                continue;
+            }
+
+            $price = (float) $row['price'];
+            $bestPrice = (float) $best[$date]['price'];
+
+            if ($price < $bestPrice || ($price === $bestPrice && $this->rowRichness($row) > $this->rowRichness($best[$date]))) {
+                $best[$date] = $row;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * Сами склеиваем самые дешёвые пары "туда-обратно" из отдельно найденных
+     * one-way перелётов: для каждой даты вылета перебираем допустимые длительности
+     * поездки (желаемая ± 1 день) и берём самую дешёвую подходящую пару.
+     *
+     * @param array<int, array<string, mixed>> $outRows
+     * @param array<int, array<string, mixed>> $backRows
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildRoundTripPairs(array $outRows, array $backRows, int $length, string $from, string $to): array
+    {
+        $outBest = $this->bestByDateIndexed($outRows);
+        $backBest = $this->bestByDateIndexed($backRows);
+
+        $offsets = array_values(array_unique(array_filter(
+            [$length - 1, $length, $length + 1],
+            static fn (int $value): bool => $value >= 1,
+        )));
+        if ($offsets === []) {
+            $offsets = [max(1, $length)];
+        }
+
+        $pairs = [];
+
+        foreach ($outBest as $date => $outRow) {
+            if ($date < $from || $date > $to) {
+                continue;
+            }
+
+            try {
+                $departDate = new DateTimeImmutable($date);
+            } catch (Throwable) {
+                continue;
+            }
+
+            $bestPair = null;
+
+            foreach ($offsets as $offset) {
+                $returnDate = $departDate->modify('+' . $offset . ' days')->format('Y-m-d');
+                if (! isset($backBest[$returnDate])) {
+                    continue;
+                }
+
+                $backRow = $backBest[$returnDate];
+                $total = (float) $outRow['price'] + (float) $backRow['price'];
+
+                if ($bestPair === null || $total < $bestPair['price']) {
+                    $bestPair = [
+                        'date' => $date,
+                        'return_at' => $returnDate,
+                        'price' => $total,
+                        'origin' => $outRow['origin'] ?? null,
+                        'destination' => $outRow['destination'] ?? null,
+                        'airline' => $outRow['airline'] ?? null,
+                        'flight_number' => $outRow['flight_number'] ?? null,
+                        'departure_at' => $outRow['departure_at'] ?? $date,
+                        'transfers' => max((int) ($outRow['transfers'] ?? 0), (int) ($backRow['transfers'] ?? 0)),
+                        'duration' => null,
+                        'expires_at' => null,
+                        'found_at' => $outRow['found_at'] ?? $backRow['found_at'] ?? null,
+                        'actual' => null,
+                        'link' => null,
+                        'source' => 'legs-combo',
+                        'out_leg' => $outRow,
+                        'back_leg' => $backRow,
+                    ];
+                }
+            }
+
+            if ($bestPair !== null) {
+                $pairs[] = $bestPair;
+            }
+        }
+
+        return $pairs;
+    }
+
+    /**
      * @param array<int, array<string, mixed>> $rows
      * @return array<int, array<string, mixed>>
      */
@@ -718,6 +908,83 @@ class FlightSearchController extends Controller
     }
 
     /**
+     * Точная one-way деталь по одной "ноге" для показанной топ-даты:
+     * реальное время вылета/прилёта, авиакомпания, номер рейса, пересадки.
+     * Массовые данные (matrix/latest) отдают только дату без времени,
+     * поэтому здесь используется тот же /aviasales/v3/prices_for_dates,
+     * что и для one-way поиска, но раздельно для каждого направления.
+     *
+     * @param array<string, mixed> $config
+     * @param array<int, mixed> $requests
+     * @return array<string, mixed>|null
+     */
+    private function fetchLegDetail(string $legOrigin, string $legDest, string $legDate, bool $direct, array $config, array &$requests): ?array
+    {
+        try {
+            $json = $this->tpRequest('/aviasales/v3/prices_for_dates', [
+                'origin' => $legOrigin,
+                'destination' => $legDest,
+                'departure_at' => $legDate,
+                'one_way' => 'true',
+                'currency' => 'rub',
+                'sorting' => 'price',
+                'limit' => 10,
+                'direct' => $direct ? 'true' : 'false',
+            ], $config);
+            $requests[] = ['method' => 'aviasales/v3/prices_for_dates', 'purpose' => 'leg-detail', 'route' => $legOrigin . '-' . $legDest, 'date' => $legDate, 'ok' => true];
+        } catch (Throwable) {
+            $requests[] = ['method' => 'aviasales/v3/prices_for_dates', 'purpose' => 'leg-detail', 'route' => $legOrigin . '-' . $legDest, 'date' => $legDate, 'ok' => false];
+
+            return null;
+        }
+
+        $detail = null;
+        foreach (($json['data'] ?? []) as $offer) {
+            if (! is_array($offer) || ! isset($offer['price'])) {
+                continue;
+            }
+            if (substr((string) ($offer['departure_at'] ?? ''), 0, 10) !== $legDate) {
+                continue;
+            }
+            if ($direct && isset($offer['transfers']) && (int) $offer['transfers'] !== 0) {
+                continue;
+            }
+            if ($detail === null || (float) $offer['price'] < (float) $detail['price']) {
+                $detail = $offer;
+            }
+        }
+
+        if (! $detail) {
+            return null;
+        }
+
+        $result = [
+            'airline' => $detail['airline'] ?? null,
+            'flight_number' => $detail['flight_number'] ?? null,
+            'found_at' => $detail['found_at'] ?? null,
+            'departure_at' => $this->hasClockTime($detail['departure_at'] ?? null) ? $detail['departure_at'] : null,
+            'arrival_at' => null,
+            'transfers' => isset($detail['transfers']) ? (int) $detail['transfers'] : null,
+            'duration' => isset($detail['duration']) ? (int) $detail['duration'] : null,
+            'stops' => [],
+            'price' => (float) $detail['price'],
+        ];
+
+        $ticket = $this->parseTicketLink($detail['link'] ?? null);
+        if ($ticket) {
+            $result['stops'] = $this->stopsFromChain($ticket['out']['chain']);
+            if ($ticket['out']['duration'] > 0) {
+                $result['duration'] = $ticket['out']['duration'];
+            }
+            $result['arrival_at'] = $this->localIsoFromTs($ticket['out']['arr_ts'], $legDest);
+        } elseif ($result['departure_at']) {
+            $result['arrival_at'] = $this->arrivalTimeFromDuration($result['departure_at'], $result['duration'], $legDest);
+        }
+
+        return $result;
+    }
+
+    /**
      * @param array<int, array<string, mixed>> $allRows
      * @return array<int, array<string, mixed>>
      */
@@ -883,145 +1150,93 @@ class FlightSearchController extends Controller
                 continue;
             }
 
-            $returnDateWanted = null;
-            try {
-                $returnDateWanted = (new DateTimeImmutable($date))->modify('+' . $length . ' days')->format('Y-m-d');
-            } catch (Throwable) {
-                $returnDateWanted = null;
-            }
-
-            $query = [
-                'origin' => $origin,
-                'destination' => $destination,
-                'departure_at' => $date,
-                'one_way' => 'false',
-                'currency' => 'rub',
-                'sorting' => 'price',
-                'limit' => 10,
-                'direct' => $direct ? 'true' : 'false',
-            ];
-            if ($returnDateWanted !== null) {
-                $query['return_at'] = $returnDateWanted;
-            }
-
-            $detail = null;
-            try {
-                $json = $this->tpRequest('/aviasales/v3/prices_for_dates', $query, $config);
-                $requests[] = ['method' => 'aviasales/v3/prices_for_dates', 'purpose' => 'rt-detail', 'date' => $date, 'ok' => true];
-
-                foreach (($json['data'] ?? []) as $offer) {
-                    if (! is_array($offer) || ! isset($offer['price'])) {
-                        continue;
-                    }
-                    if (substr((string) ($offer['departure_at'] ?? ''), 0, 10) !== $date) {
-                        continue;
-                    }
-                    if ($returnDateWanted !== null && substr((string) ($offer['return_at'] ?? ''), 0, 10) !== $returnDateWanted) {
-                        continue;
-                    }
-                    if ($direct && ((isset($offer['transfers']) && (int) $offer['transfers'] !== 0) || (isset($offer['return_transfers']) && (int) $offer['return_transfers'] !== 0))) {
-                        continue;
-                    }
-                    if ($detail === null || (float) $offer['price'] < (float) $detail['price']) {
-                        $detail = $offer;
-                    }
-                }
-
-                if ($detail) {
-                    $flight['airline'] = $detail['airline'] ?? $flight['airline'];
-                    $flight['flight_number'] = $detail['flight_number'] ?? $flight['flight_number'];
-                    if (isset($detail['found_at']) && ! $flight['found_at']) {
-                        $flight['found_at'] = $detail['found_at'];
-                    }
-                    if ($this->hasClockTime($detail['departure_at'] ?? null)) {
-                        $flight['departure_at'] = $detail['departure_at'];
-                    }
-                    if (! empty($detail['return_at'])) {
-                        $flight['return_at'] = $detail['return_at'];
-                    }
-                    if (isset($detail['transfers'])) {
-                        $flight['transfers'] = (int) $detail['transfers'];
-                    }
-                    $flight['detail_price'] = isset($detail['price']) ? (float) $detail['price'] : null;
-
-                    $ticket = $this->parseTicketLink($detail['link'] ?? null);
-                    if ($ticket) {
-                        $flight['stops'] = $this->stopsFromChain($ticket['out']['chain']);
-                        $flight['arrival_at'] = $this->localIsoFromTs($ticket['out']['arr_ts'], $destination);
-                    } else {
-                        $flight['arrival_at'] = $this->arrivalTimeFromDuration(
-                            $detail['departure_at'] ?? null,
-                            isset($detail['duration_to']) ? (int) $detail['duration_to'] : null,
-                            $destination,
-                        );
-                    }
-                }
-            } catch (Throwable) {
-                $requests[] = ['method' => 'aviasales/v3/prices_for_dates', 'purpose' => 'rt-detail', 'date' => $date, 'ok' => false];
-            }
+            // Раунд-трип теперь строится нами самими из отдельных one-way плечей
+            // (см. buildRoundTripPairs). Массовые данные (matrix/latest) содержат
+            // только дату вылета без точного времени, поэтому для показанных
+            // топ-дат отдельно запрашиваем реальные one-way предложения по каждой
+            // "ноге" — это даёт настоящее время, авиакомпанию и номер рейса.
+            $outLegRow = is_array($row['out_leg'] ?? null) ? $row['out_leg'] : null;
+            $backLegRow = is_array($row['back_leg'] ?? null) ? $row['back_leg'] : null;
 
             $returnDate = null;
-            if (! empty($flight['return_at'])) {
-                $returnDate = substr((string) $flight['return_at'], 0, 10);
-            } elseif ($returnDateWanted !== null) {
-                $returnDate = $returnDateWanted;
+            if (! empty($row['return_at'])) {
+                $returnDate = substr((string) $row['return_at'], 0, 10);
+            } else {
+                try {
+                    $returnDate = (new DateTimeImmutable($date))->modify('+' . $length . ' days')->format('Y-m-d');
+                } catch (Throwable) {
+                    $returnDate = null;
+                }
             }
 
-            $backSeg = null;
-            if ($detail && ($ticket = $this->parseTicketLink($detail['link'] ?? null))) {
-                $backSeg = $ticket['back'];
+            $outDetail = $this->fetchLegDetail($origin, $destination, $date, $direct, $config, $requests);
+            $backDetail = $returnDate ? $this->fetchLegDetail($destination, $origin, $returnDate, $direct, $config, $requests) : null;
+
+            $outAirline = $outDetail['airline'] ?? $outLegRow['airline'] ?? null;
+            $outFlightNumber = $outDetail['flight_number'] ?? $outLegRow['flight_number'] ?? null;
+            $outDeparture = $outDetail['departure_at'] ?? null;
+            $outTransfers = $outDetail['transfers'] ?? (isset($outLegRow['transfers']) ? (int) $outLegRow['transfers'] : null);
+            $outDuration = $outDetail['duration'] ?? (isset($outLegRow['duration']) ? (int) $outLegRow['duration'] : null);
+            $outPrice = $outDetail['price'] ?? $outLegRow['price'] ?? null;
+            $outArrival = $outDetail['arrival_at'] ?? ($outDeparture ? $this->arrivalTimeFromDuration($outDeparture, $outDuration, $destination) : null);
+            $outStops = $outDetail['stops'] ?? [];
+
+            $flight['airline'] = $flight['airline'] ?? $outAirline;
+            $flight['flight_number'] = $flight['flight_number'] ?? $outFlightNumber;
+            if (! $flight['found_at']) {
+                $flight['found_at'] = $outDetail['found_at'] ?? $outLegRow['found_at'] ?? null;
             }
+            if ($outDeparture) {
+                $flight['departure_at'] = $outDeparture;
+            }
+            if ($outTransfers !== null) {
+                $flight['transfers'] = $outTransfers;
+            }
+            if ($outDuration !== null && $outTransfers === 0) {
+                $flight['duration'] = $outDuration;
+            }
+            $flight['arrival_at'] = $outArrival;
+            $flight['detail_price'] = $outPrice;
+            $flight['stops'] = $outStops;
+
+            $backAirline = $backDetail['airline'] ?? $backLegRow['airline'] ?? null;
+            $backFlightNumber = $backDetail['flight_number'] ?? $backLegRow['flight_number'] ?? null;
+            $backDeparture = $backDetail['departure_at'] ?? null;
+            $backTransfers = $backDetail['transfers'] ?? (isset($backLegRow['transfers']) ? (int) $backLegRow['transfers'] : null);
+            $backDuration = $backDetail['duration'] ?? (isset($backLegRow['duration']) ? (int) $backLegRow['duration'] : null);
+            $backPrice = $backDetail['price'] ?? $backLegRow['price'] ?? null;
+            $backArrival = $backDetail['arrival_at'] ?? ($backDeparture ? $this->arrivalTimeFromDuration($backDeparture, $backDuration, $origin) : null);
+            $backStops = $backDetail['stops'] ?? [];
+
+            $flight['return_at'] = $backDeparture ?: $returnDate;
 
             $outLeg = [
                 'origin' => $origin,
                 'destination' => $destination,
                 'date' => $date,
-                'departure_at' => $flight['departure_at'],
-                'arrival_at' => $flight['arrival_at'],
-                'airline' => $flight['airline'],
-                'flight_number' => $flight['flight_number'],
-                'transfers' => $flight['transfers'],
-                'duration' => $backSeg && ($backSeg['duration'] ?? 0) > 0 ? $backSeg['duration'] : ($this->hasClockTime($flight['departure_at']) && $flight['duration'] ? $flight['duration'] : null),
-                'stops' => $flight['stops'],
-                'oneway_price' => null,
+                'departure_at' => $outDeparture,
+                'arrival_at' => $outArrival,
+                'airline' => $outAirline,
+                'flight_number' => $outFlightNumber,
+                'transfers' => $outTransfers,
+                'duration' => $outDuration,
+                'stops' => $outStops,
+                'oneway_price' => $outPrice,
             ];
 
-            $returnClock = $this->hasClockTime($flight['return_at'] ?? null) ? $flight['return_at'] : null;
             $backLeg = [
                 'origin' => $destination,
                 'destination' => $origin,
                 'date' => $returnDate,
-                'departure_at' => $returnClock ?: ($backSeg ? $this->localIsoFromTs($backSeg['dep_ts'], $destination) : null),
-                'arrival_at' => $backSeg ? $this->localIsoFromTs($backSeg['arr_ts'], $origin) : null,
-                'airline' => $flight['airline'],
-                'flight_number' => null,
-                'transfers' => isset($detail['return_transfers']) ? (int) $detail['return_transfers'] : null,
-                'duration' => $backSeg && ($backSeg['duration'] ?? 0) > 0 ? $backSeg['duration'] : null,
-                'stops' => $backSeg ? $this->stopsFromChain($backSeg['chain']) : [],
-                'oneway_price' => null,
+                'departure_at' => $backDeparture,
+                'arrival_at' => $backArrival,
+                'airline' => $backAirline,
+                'flight_number' => $backFlightNumber,
+                'transfers' => $backTransfers,
+                'duration' => $backDuration,
+                'stops' => $backStops,
+                'oneway_price' => $backPrice,
             ];
-
-            $outInfo = $legInfo($origin, $destination, $date);
-            if ($outInfo) {
-                $outLeg['oneway_price'] = $outInfo['price'];
-                if ($outLeg['transfers'] === null) {
-                    $outLeg['transfers'] = $outInfo['transfers'];
-                }
-                if ($outLeg['duration'] === null && ($outInfo['transfers'] ?? null) === 0) {
-                    $outLeg['duration'] = $outInfo['duration'];
-                }
-            }
-
-            $backInfo = $returnDate ? $legInfo($destination, $origin, $returnDate) : null;
-            if ($backInfo) {
-                $backLeg['oneway_price'] = $backInfo['price'];
-                if ($backLeg['transfers'] === null) {
-                    $backLeg['transfers'] = $backInfo['transfers'];
-                }
-                if ($backLeg['duration'] === null && ($backInfo['transfers'] ?? null) === 0) {
-                    $backLeg['duration'] = $backInfo['duration'];
-                }
-            }
 
             $flight['legs'] = ['out' => $outLeg, 'back' => $backLeg];
             $flights[] = $flight;
